@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>PicAI Pro</title>
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PicAI Pro">
+<meta name="theme-color" content="#000">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --acc:#a8ff78;--red:#ff4757;--yel:#ffd32a;--blu:#74b9ff;
+  --bg:#080808;--s1:#111;--s2:#1a1a1a;--t2:rgba(255,255,255,.55);
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);
+}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#fff;touch-action:none;}
+.scr{display:none;position:absolute;inset:0;} .scr.on{display:block;}
+/* HOME */
+#sH{background:var(--bg);overflow-y:auto;touch-action:pan-y;}
+.hhead{padding:calc(var(--st)+54px) 16px 12px;font-size:1.5rem;font-weight:800;
+  background:linear-gradient(90deg,var(--acc),#78ffd6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hbody{padding:0 14px;display:flex;flex-direction:column;gap:10px;}
+.hcard{border-radius:18px;padding:15px;display:flex;align-items:center;gap:12px;cursor:pointer;
+  position:relative;border:1px solid rgba(255,255,255,.07);}
+.hcard:active{opacity:.8;}
+.hcg{background:linear-gradient(135deg,rgba(168,255,120,.12),rgba(120,255,214,.07));}
+.hcr{background:linear-gradient(135deg,rgba(255,71,87,.12),rgba(255,100,50,.07));}
+.hcb{background:linear-gradient(135deg,rgba(116,185,255,.12),rgba(108,99,255,.07));}
+.hico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.hcg .hico{background:rgba(168,255,120,.15);} .hcr .hico{background:rgba(255,71,87,.13);} .hcb .hico{background:rgba(116,185,255,.15);}
+.hct{font-size:.88rem;font-weight:700;margin-bottom:2px;} .hcs{font-size:.62rem;color:var(--t2);line-height:1.4;}
+.hbadge{position:absolute;top:9px;right:9px;font-size:.45rem;font-weight:700;padding:2px 6px;border-radius:20px;}
+.hcg .hbadge{background:rgba(168,255,120,.2);color:var(--acc);} .hcr .hbadge{background:rgba(255,71,87,.2);color:var(--red);} .hcb .hbadge{background:rgba(116,185,255,.2);color:var(--blu);}
+.hrow{display:flex;gap:8px;}
+.hsm{flex:1;background:var(--s1);border-radius:14px;padding:12px;cursor:pointer;border:1px solid rgba(255,255,255,.06);}
+.hsm:active{opacity:.8;} .hsmi{font-size:1.1rem;margin-bottom:3px;} .hsmt{font-size:.72rem;font-weight:700;margin-bottom:1px;} .hsms{font-size:.57rem;color:var(--t2);}
+.hrec{padding:0 14px 80px;} .hlbl{font-size:.54rem;color:var(--t2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;margin-top:12px;}
+.hgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;border-radius:8px;overflow:hidden;}
+.hthumb{aspect-ratio:1;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:#444;position:relative;overflow:hidden;cursor:pointer;}
+.hthumb img,.hthumb video{width:100%;height:100%;object-fit:cover;}
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;
+  padding:7px 0 calc(var(--sb)+5px);background:rgba(0,0,0,.92);backdrop-filter:blur(20px);
+  border-top:1px solid rgba(255,255,255,.05);z-index:100;}
+.bni{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:2px 8px;}
+.bni .ni{font-size:1.1rem;} .bni .nl{font-size:.43rem;color:var(--t2);}
+.bni.on .nl{color:var(--acc);} .bni.on .ni{filter:drop-shadow(0 0 5px var(--acc));}
+/* CAMERA BASE */
+#sE,#sP{background:#000;}
+.vid-hidden{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+.glcv{position:absolute;inset:0;width:100%;height:100%;z-index:1;}
+.capcv{display:none;}
+.cflash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:60;transition:opacity .05s;}
+.cflash.go{opacity:.9;transition:opacity .35s;}
+.cerr{position:absolute;inset:0;background:rgba(0,0,0,.92);z-index:80;display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:26px;text-align:center;}
+.cerr.show{display:flex;}
+.ceb{background:var(--acc);color:#000;border:none;border-radius:10px;padding:10px 18px;font-size:.8rem;font-weight:700;cursor:pointer;}
+.ceb2{background:var(--s2);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:.8rem;font-weight:700;cursor:pointer;}
+/* GRID */
+.cgrid{position:absolute;inset:0;z-index:2;pointer-events:none;
+  display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;}
+.cgrid div{border:.5px solid rgba(255,255,255,.1);}
+/* FOCUS BOX */
+.fbox{position:absolute;width:74px;height:74px;z-index:3;pointer-events:none;
+  top:50%;left:50%;transform:translate(-50%,-50%);transition:all .2s;}
+.fc{position:absolute;width:12px;height:12px;border-style:solid;border-color:var(--yel);}
+.fc.tl{top:0;left:0;border-width:2px 0 0 2px;} .fc.tr{top:0;right:0;border-width:2px 2px 0 0;}
+.fc.bl{bottom:0;left:0;border-width:0 0 2px 2px;} .fc.br{bottom:0;right:0;border-width:0 2px 2px 0;}
+/* EV POPUP */
+.evpop{position:absolute;z-index:8;display:none;flex-direction:column;align-items:center;gap:3px;pointer-events:all;}
+.evpop.show{display:flex;} .evico{font-size:.82rem;}
+.evtr{width:3px;height:88px;background:rgba(255,255,255,.2);border-radius:2px;position:relative;touch-action:none;}
+.evfill{position:absolute;bottom:50%;left:0;right:0;border-radius:2px;background:var(--yel);}
+.evth{position:absolute;left:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--yel);top:50%;}
+.evval{font-size:.38rem;color:var(--yel);font-family:monospace;}
+/* ZOOM BADGE */
+.zbadge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-radius:20px;padding:4px 12px;
+  font-size:.74rem;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;}
+/* REC BADGE */
+.rbadge{position:absolute;top:calc(var(--st)+7px);left:50%;transform:translateX(-50%);z-index:10;
+  background:var(--red);border-radius:20px;padding:3px 10px;display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .3s;}
+.rbadge.show{opacity:1;} .rdot{width:6px;height:6px;border-radius:50%;background:#fff;animation:rb 1s infinite;}
+@keyframes rb{0%,100%{opacity:1;}50%{opacity:0;}} .rtime{font-family:monospace;font-size:.72rem;font-weight:700;}
+/* TIMER */
+.tcd{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:60;display:none;align-items:center;justify-content:center;font-size:6rem;font-weight:900;}
+.tcd.show{display:flex;}
+/* EASY TOP */
+.etop{position:absolute;top:0;left:0;right:0;z-index:5;padding:calc(var(--st)+5px) 12px 7px;
+  background:linear-gradient(180deg,rgba(0,0,0,.7) 0%,transparent 100%);
+  display:flex;align-items:center;justify-content:space-between;}
+.eclosebtn{width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.4);border:none;color:#fff;font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.etopbtns{display:flex;gap:6px;}
+.etopbtn{background:rgba(0,0,0,.4);border:none;color:#fff;border-radius:20px;padding:4px 9px;font-size:.58rem;cursor:pointer;}
+.etopbtn.on{color:var(--yel);}
+/* AI PANEL */
+.aip{position:absolute;top:calc(var(--st)+48px);left:9px;right:9px;z-index:5;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(16px);border:1px solid rgba(168,255,120,.3);
+  border-radius:13px;padding:8px 10px;transition:opacity .3s;}
+.aiphd{display:flex;align-items:center;gap:5px;margin-bottom:4px;}
+.aipdot{width:6px;height:6px;border-radius:50%;background:var(--acc);box-shadow:0 0 6px var(--acc);animation:glow 2s infinite;}
+@keyframes glow{0%,100%{transform:scale(1);}50%{transform:scale(1.4);}}
+.aiplbl{font-size:.5rem;color:var(--acc);font-weight:700;letter-spacing:.1em;}
+.aipsc{font-size:.48rem;color:var(--t2);margin-left:auto;}
+.aiptxt{font-size:.7rem;line-height:1.5;} .aiptxt strong{color:var(--acc);}
+/* LENS PILL */
+.lpill{position:absolute;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(var(--sb)+148px);
+  display:flex;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);border-radius:20px;padding:3px;}
+.lpbtn{padding:4px 12px;border:none;background:transparent;color:rgba(255,255,255,.6);
+  font-size:.58rem;font-weight:700;cursor:pointer;border-radius:16px;}
+.lpbtn small{display:block;font-size:.34rem;opacity:.65;font-weight:400;} .lpbtn.on{background:rgba(255,255,255,.2);color:#fff;}
+/* EASY BOTTOM */
+.ebtm{position:absolute;bottom:0;left:0;right:0;z-index:5;
+  padding:5px 18px calc(var(--sb)+16px);
+  background:linear-gradient(0deg,rgba(0,0,0,.92) 0%,rgba(0,0,0,.6) 80%,transparent 100%);}
+.mrow{display:flex;justify-content:center;overflow-x:auto;margin-bottom:12px;} .mrow::-webkit-scrollbar{display:none;}
+.mi{flex-shrink:0;padding:4px 12px;font-size:.62rem;color:rgba(255,255,255,.45);cursor:pointer;border-radius:20px;}
+.mi.on{color:var(--yel);font-weight:700;}
+.srow{display:flex;align-items:center;justify-content:space-between;}
+.tprev{width:46px;height:46px;border-radius:9px;overflow:hidden;background:var(--s2);border:2px solid rgba(255,255,255,.25);cursor:pointer;flex-shrink:0;}
+.tprev img,.tprev video{width:100%;height:100%;object-fit:cover;}
+.tprev-e{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.shbtn{width:76px;height:76px;position:relative;cursor:pointer;flex-shrink:0;}
+.shring{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(255,255,255,.7);}
+.shfill{position:absolute;inset:6px;border-radius:50%;background:#fff;transition:transform .1s;}
+.shbtn:active .shfill{transform:scale(.88);}
+.recbtn{width:76px;height:76px;position:relative;cursor:pointer;flex-shrink:0;display:none;}
+.recring{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(255,255,255,.7);}
+.recfill{position:absolute;inset:6px;border-radius:50%;background:var(--red);transition:all .3s;}
+.recfill.on{border-radius:9px;inset:17px;}
+.sidebtn{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:.95rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+/* PRO TOP */
+.ptop{position:absolute;top:0;left:0;right:0;z-index:5;padding:calc(var(--st)+5px) 12px 7px;
+  background:linear-gradient(180deg,rgba(0,0,0,.8) 0%,transparent 100%);
+  display:flex;align-items:center;justify-content:space-between;}
+.pbackbtn{background:rgba(0,0,0,.4);border:none;color:var(--yel);font-size:.66rem;letter-spacing:.08em;cursor:pointer;padding:4px 9px;border-radius:20px;}
+.pmlbl{font-size:.68rem;font-weight:700;color:var(--yel);font-family:monospace;}
+/* HISTOGRAM */
+.hist{position:absolute;top:calc(var(--st)+40px);right:9px;z-index:5;width:50px;height:26px;
+  background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.1);border-radius:4px;
+  overflow:hidden;display:flex;align-items:flex-end;gap:1px;padding:2px;}
+.hb{flex:1;border-radius:1px;opacity:.85;}
+/* HUD PARAMS */
+.phud{position:absolute;z-index:5;left:0;right:0;display:flex;justify-content:space-around;padding:4px 12px;pointer-events:none;}
+.ph{text-align:center;} .phv{font-size:.62rem;font-weight:700;font-family:monospace;} .phl{font-size:.34rem;color:rgba(255,255,255,.4);letter-spacing:.05em;margin-top:1px;}
+.ph.hl .phv{color:var(--yel);}
+/* LEVEL */
+.lbar{position:absolute;z-index:5;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;pointer-events:none;}
+.lline{width:22px;height:1px;background:rgba(255,255,255,.2);} .ldot{width:5px;height:5px;border-radius:50%;background:var(--acc);box-shadow:0 0 5px var(--acc);}
+/* PRO BOTTOM */
+.pbtm{position:absolute;bottom:0;left:0;right:0;z-index:5;background:rgba(0,0,0,.94);
+  backdrop-filter:blur(24px);border-top:1px solid rgba(255,255,255,.1);
+  padding:5px 11px calc(var(--sb)+7px);}
+/* 3眼 */
+.tri{display:flex;justify-content:center;margin-bottom:5px;}
+.tribtn{padding:4px 12px;background:rgba(255,255,255,.06);border:none;color:var(--t2);
+  font-size:.54rem;cursor:pointer;border-right:1px solid rgba(255,255,255,.08);}
+.tribtn:first-child{border-radius:16px 0 0 16px;} .tribtn:last-child{border-radius:0 16px 16px 0;border-right:none;}
+.tribtn.on{background:rgba(255,255,255,.18);color:#fff;font-weight:700;}
+/* DIAL */
+.dial{display:flex;overflow-x:auto;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:3px;}
+.dial::-webkit-scrollbar{display:none;}
+.ditem{flex-shrink:0;min-width:38px;text-align:center;padding:3px 4px;font-size:.48rem;color:#333;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-4px;}
+.ditem.on{color:var(--yel);border-bottom-color:var(--yel);}
+/* TABS */
+.tabs{display:flex;gap:3px;margin-bottom:4px;}
+.tab{flex:1;padding:4px 2px;text-align:center;border-radius:7px;background:var(--s2);border:1.5px solid transparent;font-size:.48rem;font-weight:600;color:var(--t2);cursor:pointer;}
+.tab.on{background:rgba(255,200,50,.12);border-color:var(--yel);color:var(--yel);}
+.tcon{display:none;} .tcon.on{display:block;}
+/* GL NOTE */
+.glnote{font-size:.46rem;color:rgba(168,255,120,.65);text-align:center;padding:2px 0 3px;
+  border:1px solid rgba(168,255,120,.15);border-radius:5px;margin-bottom:3px;background:rgba(168,255,120,.04);}
+/* SLIDERS */
+.slg{display:flex;flex-direction:column;gap:5px;margin-bottom:3px;}
+.slr{display:flex;align-items:center;gap:6px;}
+.sll{font-size:.52rem;width:22px;flex-shrink:0;font-family:monospace;}
+.sll.f{color:var(--yel);} .sll.ss{color:var(--blu);} .sll.iso{color:var(--red);} .sll.ev{color:rgba(255,255,255,.5);}
+.slt{flex:1;height:5px;background:#1a1a1a;border-radius:3px;position:relative;touch-action:none;}
+.slf{height:100%;border-radius:3px;}
+.slth{position:absolute;top:50%;transform:translate(50%,-50%);width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 2px 7px rgba(0,0,0,.6);}
+.slv{font-size:.52rem;color:#fff;width:33px;text-align:right;flex-shrink:0;font-family:monospace;}
+.isoticks{display:flex;justify-content:space-between;padding:0 22px 0 28px;margin-top:-3px;margin-bottom:1px;}
+.isotick{font-size:.3rem;color:#333;font-family:monospace;}
+/* EXTRAS */
+.extr{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;}
+.exbtn{flex:1;min-width:50px;padding:4px 2px;text-align:center;border-radius:6px;background:var(--s2);border:1px solid rgba(255,255,255,.07);font-size:.44rem;color:var(--t2);cursor:pointer;}
+.exbtn.on{border-color:var(--yel);color:var(--yel);}
+/* WB */
+.wbg{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:4px;}
+.wbcard{border-radius:8px;background:var(--s2);border:1.5px solid rgba(255,255,255,.07);padding:5px 3px;text-align:center;cursor:pointer;}
+.wbcard.on{border-color:var(--yel);background:rgba(255,200,50,.1);}
+.wbcard .wi{font-size:.95rem;margin-bottom:1px;} .wbcard .wl{font-size:.44rem;color:var(--t2);} .wbcard.on .wl{color:var(--yel);}
+.krow{display:flex;align-items:center;gap:5px;margin-top:3px;}
+.klbl{font-size:.48rem;color:#888;width:24px;font-family:monospace;}
+.ktr{flex:1;height:5px;background:linear-gradient(90deg,#1a3cff,#fff5e0,#ff6b00);border-radius:3px;position:relative;touch-action:none;}
+.kth{position:absolute;top:50%;transform:translate(50%,-50%);right:55%;width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.6);}
+.kval{font-size:.48rem;color:#fff;width:30px;text-align:right;font-family:monospace;}
+/* STYLE */
+.styg{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;}
+.stycard{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid rgba(255,255,255,.07);}
+.stycard.on{border-color:var(--yel);}
+.styprev{height:34px;display:flex;align-items:center;justify-content:center;font-size:.43rem;color:rgba(255,255,255,.3);}
+.styl{font-size:.4rem;text-align:center;padding:2px;color:#555;background:rgba(0,0,0,.5);font-family:monospace;} .stycard.on .styl{color:var(--yel);}
+/* AF */
+.afg{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:3px;}
+.afcard{border-radius:8px;background:var(--s2);border:1.5px solid rgba(255,255,255,.07);padding:6px 4px;display:flex;align-items:center;gap:5px;cursor:pointer;}
+.afcard.on{border-color:var(--acc);background:rgba(168,255,120,.07);}
+.afico{font-size:.95rem;} .aft{font-size:.52rem;font-weight:600;color:var(--t2);} .afs{font-size:.42rem;color:#444;margin-top:1px;} .afcard.on .aft{color:var(--acc);}
+.afex{display:flex;gap:3px;}
+.afexbtn{flex:1;border-radius:6px;background:var(--s2);border:1px solid rgba(255,255,255,.07);padding:5px 2px;text-align:center;cursor:pointer;font-size:.48rem;color:var(--t2);}
+.afexbtn.on{border-color:var(--acc);color:var(--acc);}
+/* ADV */
+.advsec{background:rgba(255,255,255,.03);border-radius:7px;padding:5px 7px;margin-bottom:3px;}
+.advt{font-size:.44rem;color:#555;letter-spacing:.1em;margin-bottom:3px;font-family:monospace;}
+.advr{display:flex;align-items:center;gap:5px;margin-bottom:2px;}
+.advlbl{font-size:.46rem;color:var(--t2);width:42px;flex-shrink:0;}
+.advopts{display:flex;gap:3px;flex:1;overflow-x:auto;} .advopts::-webkit-scrollbar{display:none;}
+.advopt{flex-shrink:0;padding:2px 5px;border-radius:4px;background:var(--s2);border:1px solid rgba(255,255,255,.07);font-size:.44rem;color:var(--t2);cursor:pointer;}
+.advopt.on{border-color:var(--yel);color:var(--yel);}
+.custrow{display:flex;gap:3px;}
+.custbtn{flex:1;padding:5px 2px;border-radius:7px;background:var(--s2);border:1.5px solid rgba(255,255,255,.07);font-size:.5rem;font-weight:700;color:var(--t2);cursor:pointer;text-align:center;}
+/* PRO SHUTTER ROW */
+.pshr{display:flex;align-items:center;justify-content:space-between;margin-top:4px;}
+.pctrl{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:.82rem;cursor:pointer;}
+.psht{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.1);border:2.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .1s;}
+.psht:active{transform:scale(.9);} .pshtf{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#fff,#ddd);}
+.prec{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.1);border:2.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;display:none;}
+.precf{width:44px;height:44px;border-radius:50%;background:var(--red);transition:all .3s;} .precf.on{border-radius:8px;width:20px;height:20px;}
+/* GALLERY */
+#sG{background:var(--bg);overflow-y:auto;touch-action:pan-y;}
+.ghd{padding:calc(var(--st)+48px) 12px 9px;display:flex;align-items:center;gap:9px;}
+.backbtn{width:32px;height:32px;border-radius:50%;background:var(--s1);border:none;color:#fff;font-size:.95rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.gttl{font-size:.88rem;font-weight:700;} .gcnt{font-size:.58rem;color:var(--t2);margin-left:auto;}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:0 0 20px;}
+.mitem{aspect-ratio:1;background:var(--s2);position:relative;overflow:hidden;}
+.mitem img,.mitem video{width:100%;height:100%;object-fit:cover;}
+.mdel{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:.52rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.emptg{display:flex;flex-direction:column;align-items:center;justify-content:center;height:250px;gap:9px;color:var(--t2);grid-column:span 3;}
+.emptg .ei{font-size:2.6rem;}
+/* ERASER */
+#sER{background:var(--bg);}
+.erhd{padding:calc(var(--st)+48px) 12px 9px;display:flex;align-items:center;gap:9px;}
+.erttl{font-size:.88rem;font-weight:700;}
+.erwrap{margin:0 11px;border-radius:12px;overflow:hidden;height:270px;background:var(--s2);position:relative;display:flex;align-items:center;justify-content:center;}
+#erImg{width:100%;height:100%;object-fit:contain;display:none;} #erCv{position:absolute;inset:0;display:none;touch-action:none;}
+.erno{display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--t2);padding:18px;}
+.erno .ei{font-size:1.9rem;} .erno p{font-size:.68rem;}
+.erpick{background:var(--s1);border:none;border-radius:9px;padding:6px 12px;color:#fff;font-size:.7rem;font-weight:600;cursor:pointer;}
+.ertools{padding:6px 11px;display:flex;gap:4px;}
+.ertool{flex:1;padding:6px 2px;border-radius:8px;background:var(--s1);border:1.5px solid transparent;color:#fff;font-size:.54rem;font-weight:500;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.ertool .ti{font-size:.82rem;} .ertool.on{border-color:var(--red);background:rgba(255,71,87,.1);color:var(--red);}
+.ersz{padding:0 11px 4px;display:flex;align-items:center;gap:5px;}
+.erszl{font-size:.52rem;color:var(--t2);width:30px;}
+.ersztr{flex:1;height:4px;background:var(--s2);border-radius:2px;position:relative;touch-action:none;}
+.erszfill{height:100%;width:45%;background:var(--red);border-radius:2px;}
+.erszth{position:absolute;top:50%;right:55%;transform:translate(50%,-50%);width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.4);}
+.erszv{font-size:.52rem;color:var(--t2);width:20px;text-align:right;}
+.erai{margin:0 11px 5px;background:linear-gradient(135deg,var(--red),#ff6b35);border:none;border-radius:11px;padding:10px;width:calc(100% - 22px);color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;}
+.erst{margin:0 11px;background:rgba(255,71,87,.07);border:1px solid rgba(255,71,87,.18);border-radius:8px;padding:6px 9px;display:flex;align-items:center;gap:5px;font-size:.6rem;color:var(--t2);}
+.erst strong{color:#fff;}
+/* TOAST */
+.toast{position:fixed;bottom:calc(var(--sb)+78px);left:50%;transform:translateX(-50%);
+  background:rgba(18,18,18,.96);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;padding:6px 13px;font-size:.66rem;color:#fff;font-weight:500;
+  white-space:nowrap;z-index:300;opacity:0;pointer-events:none;transition:all .3s;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+/* PWA */
+#ib{position:fixed;bottom:0;left:0;right:0;z-index:999;background:rgba(12,12,12,.97);
+  backdrop-filter:blur(24px);border-top:1px solid rgba(168,255,120,.2);
+  padding:12px 14px calc(var(--sb)+15px);transform:translateY(100%);transition:transform .4s cubic-bezier(.34,1.56,.64,1);}
+#ib.show{transform:translateY(0);}
+.ibrow{display:flex;align-items:center;gap:9px;margin-bottom:9px;}
+.ibico{width:40px;height:40px;border-radius:9px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.ibt{font-size:.84rem;font-weight:700;margin-bottom:2px;} .ibs{font-size:.6rem;color:var(--t2);line-height:1.4;}
+.ibx{margin-left:auto;background:none;border:none;color:var(--t2);font-size:.95rem;cursor:pointer;}
+.ibbtns{display:flex;gap:6px;}
+.ibinst{flex:1;background:linear-gradient(135deg,var(--acc),#78ffd6);color:#000;border:none;border-radius:9px;padding:10px;font-size:.78rem;font-weight:700;cursor:pointer;}
+.iblater{background:rgba(255,255,255,.07);color:var(--t2);border:none;border-radius:9px;padding:10px 11px;font-size:.74rem;cursor:pointer;}
+#iosg{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.8);backdrop-filter:blur(16px);display:none;align-items:flex-end;}
+#iosg.show{display:flex;}
+.igcard{background:#1a1a1a;border-radius:18px 18px 0 0;padding:18px 16px calc(var(--sb)+24px);width:100%;}
+.igt{font-size:.88rem;font-weight:700;margin-bottom:3px;} .igs{font-size:.64rem;color:var(--t2);margin-bottom:11px;line-height:1.5;}
+.igstep{display:flex;gap:7px;margin-bottom:10px;align-items:flex-start;}
+.ignum{width:22px;height:22px;border-radius:50%;background:rgba(168,255,120,.15);color:var(--acc);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.igst{font-size:.74rem;font-weight:600;margin-bottom:1px;} .igss{font-size:.6rem;color:var(--t2);}
+.igclose{width:100%;background:rgba(255,255,255,.07);border:none;border-radius:9px;padding:9px;color:var(--t2);font-size:.76rem;cursor:pointer;}
+</style>
+</head>
+<body>
+<!-- HOME -->
+<div class="scr on" id="sH">
+  <div class="hhead">PicAI Pro</div>
+  <div class="hbody">
+    <div class="hcard hcg" id="hE"><div class="hbadge">初心者向け</div><div class="hico">✨</div><div><div class="hct">かんたん撮影</div><div class="hcs">AIリアルタイムアドバイス。ピンチでズーム。タップでフォーカス＋露出。</div></div></div>
+    <div class="hcard hcr" id="hV"><div class="hbadge">NEW</div><div class="hico">🎬</div><div><div class="hct">動画撮影</div><div class="hcs">高品質動画。スロー・タイムラプスに対応。</div></div></div>
+    <div class="hcard hcb" id="hP"><div class="hbadge">PRO</div><div class="hico">📷</div><div><div class="hct">プロモード（一眼レフ相当）</div><div class="hcs">WebGLでISO・WB・スタイルを実際の映像にリアルタイム反映。iOS対応。</div></div></div>
+    <div class="hrow">
+      <div class="hsm" id="hER"><div class="hsmi">🧹</div><div class="hsmt">AI消去</div><div class="hsms">不要なものをAIで消す</div></div>
+      <div class="hsm" id="hG"><div class="hsmi">🖼</div><div class="hsmt">アルバム</div><div class="hsms">撮影した写真・動画</div></div>
+    </div>
+  </div>
+  <div class="hrec"><div class="hlbl">最近の写真</div><div class="hgrid" id="hgrid"><div class="hthumb" style="grid-column:span 3;">まだありません</div></div></div>
+  <div class="bnav">
+    <div class="bni on" id="bn0"><div class="ni">🏠</div><div class="nl">ホーム</div></div>
+    <div class="bni" id="bn1"><div class="ni">✨</div><div class="nl">かんたん</div></div>
+    <div class="bni" id="bn2"><div class="ni">📷</div><div class="nl">PRO</div></div>
+    <div class="bni" id="bn3"><div class="ni">🖼</div><div class="nl">アルバム</div></div>
+    <div class="bni" id="bn4"><div class="ni">🧹</div><div class="nl">消去</div></div>
+  </div>
+</div>
+<!-- EASY CAM -->
+<div class="scr" id="sE">
+  <video class="vid-hidden" id="eVid" autoplay playsinline muted></video>
+  <canvas class="glcv" id="eGL"></canvas>
+  <canvas class="capcv" id="eCAP"></canvas>
+  <div class="cflash" id="eFL"></div>
+  <div class="cerr" id="eERR">
+    <div style="font-size:2.2rem;">📵</div>
+    <div style="font-size:.88rem;font-weight:700;">カメラへのアクセスが必要です</div>
+    <div style="font-size:.68rem;color:var(--t2);line-height:1.6;text-align:center;">設定でカメラを「許可」にしてください。</div>
+    <button class="ceb" id="eR">🔄 再試行</button>
+    <button class="ceb2" id="eBK">← 戻る</button>
+  </div>
+  <div class="cgrid" id="eGR"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+  <div class="fbox" id="eFB"><div class="fc tl"></div><div class="fc tr"></div><div class="fc bl"></div><div class="fc br"></div></div>
+  <div class="evpop" id="eEV"><span class="evico">☀️</span><div class="evtr" id="eEVT"><div class="evfill" id="eEVF"></div><div class="evth" id="eEVTH"></div></div><span class="evval" id="eEVV">±0</span></div>
+  <div class="zbadge" id="eZB">1.0x</div>
+  <div class="rbadge" id="eRB"><div class="rdot"></div><div class="rtime" id="eRT">00:00</div></div>
+  <div class="tcd" id="eTCD"></div>
+  <div class="aip" id="aip">
+    <div class="aiphd"><div class="aipdot"></div><span class="aiplbl">AIアドバイス</span><span class="aipsc" id="aiSC">📷 準備完了</span></div>
+    <div class="aiptxt" id="aiTX">カメラを向けると<strong>AIが映像を分析</strong>してアドバイスします。</div>
+  </div>
+  <div class="etop">
+    <button class="eclosebtn" id="eCL">✕</button>
+    <div class="etopbtns">
+      <button class="etopbtn" id="eGRB">⊞</button>
+      <button class="etopbtn" id="eFLB">⚡ 自動</button>
+      <button class="etopbtn" id="eTMB">⏱ OFF</button>
+    </div>
+  </div>
+  <div class="lpill" id="eLP">
+    <button class="lpbtn" id="lUW">0.5x<small>超広角</small></button>
+    <button class="lpbtn on" id="lW">1x<small>広角</small></button>
+    <button class="lpbtn" id="lT">3x<small>望遠</small></button>
+  </div>
+  <div class="ebtm">
+    <div class="mrow" id="eMR">
+      <div class="mi" data-m="スロー">スロー</div>
+      <div class="mi" data-m="タイムラプス">タイムラプス</div>
+      <div class="mi" data-m="動画">動画</div>
+      <div class="mi on" data-m="写真">写真</div>
+      <div class="mi" data-m="ポートレート">ポートレート</div>
+    </div>
+    <div class="srow">
+      <div class="tprev" id="eTP"><div class="tprev-e">🖼</div></div>
+      <div class="shbtn" id="eSH"><div class="shring"></div><div class="shfill"></div></div>
+      <div class="recbtn" id="eRC"><div class="recring"></div><div class="recfill" id="eRF"></div></div>
+      <button class="sidebtn" id="eFP">🔄</button>
+    </div>
+  </div>
+</div>
+<!-- PRO CAM -->
+<div class="scr" id="sP">
+  <video class="vid-hidden" id="pVid" autoplay playsinline muted></video>
+  <canvas class="glcv" id="pGL"></canvas>
+  <canvas class="capcv" id="pCAP"></canvas>
+  <div class="cflash" id="pFL"></div>
+  <div class="cerr" id="pERR">
+    <div style="font-size:2.2rem;">📵</div>
+    <div style="font-size:.88rem;font-weight:700;">カメラへのアクセスが必要です</div>
+    <div style="font-size:.68rem;color:var(--t2);line-height:1.6;text-align:center;">設定でカメラを「許可」にしてください。</div>
+    <button class="ceb" id="pR">🔄 再試行</button>
+    <button class="ceb2" id="pBK">← 戻る</button>
+  </div>
+  <div class="cgrid" id="pGR"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+  <div class="fbox" id="pFB"><div class="fc tl"></div><div class="fc tr"></div><div class="fc bl"></div><div class="fc br"></div></div>
+  <div class="zbadge" id="pZB">1.0x</div>
+  <div class="rbadge" id="pRB"><div class="rdot"></div><div class="rtime" id="pRT">00:00</div></div>
+  <div class="tcd" id="pTCD"></div>
+  <div class="hist"><div class="hb" style="height:55%;background:rgba(0,100,255,.7);"></div><div class="hb" style="height:80%;background:rgba(80,150,255,.7);"></div><div class="hb" style="height:90%;background:#fff8;"></div><div class="hb" style="height:68%;background:rgba(255,200,100,.7);"></div><div class="hb" style="height:38%;background:rgba(255,100,50,.7);"></div><div class="hb" style="height:16%;background:rgba(255,60,60,.65);"></div></div>
+  <div class="phud" id="pHUD" style="bottom:calc(var(--sb)+215px);">
+    <div class="ph hl"><div class="phv" id="hAP">f/2.8</div><div class="phl">APERTURE</div></div>
+    <div class="ph"><div class="phv" id="hSS">1/500</div><div class="phl">SHUTTER</div></div>
+    <div class="ph"><div class="phv" id="hIS">ISO200</div><div class="phl">ISO</div></div>
+    <div class="ph"><div class="phv" id="hEV">±0.0</div><div class="phl">EV</div></div>
+  </div>
+  <div class="lbar" style="bottom:calc(var(--sb)+213px);"><div class="lline"></div><div class="ldot"></div><div class="lline"></div></div>
+  <div class="ptop">
+    <button class="pbackbtn" id="pBK2">← BACK</button>
+    <div class="pmlbl" id="pML">AV MODE</div>
+    <div style="font-size:.52rem;color:rgba(255,255,255,.5);font-family:monospace;">WebGL Pro</div>
+  </div>
+  <div class="pbtm">
+    <div class="tri">
+      <button class="tribtn" id="tUW">0.5x<br><span style="font-size:.34rem;opacity:.6;">超広角</span></button>
+      <button class="tribtn on" id="tW">1x<br><span style="font-size:.34rem;opacity:.6;">広角</span></button>
+      <button class="tribtn" id="tT">3x<br><span style="font-size:.34rem;opacity:.6;">望遠</span></button>
+    </div>
+    <div class="dial" id="pDL">
+      <div class="ditem" data-d="AUTO">AUTO</div><div class="ditem" data-d="P">P</div>
+      <div class="ditem on" data-d="AV">AV</div><div class="ditem" data-d="TV">TV</div>
+      <div class="ditem" data-d="M">M</div><div class="ditem" data-d="B">B</div>
+      <div class="ditem" data-d="SCN">SCN</div><div class="ditem" data-d="VID">VID</div>
+    </div>
+    <div class="tabs" id="pTABS">
+      <div class="tab on" data-t="exp">📊 露出</div>
+      <div class="tab" data-t="wb">🌡 WB</div>
+      <div class="tab" data-t="sty">🎨 スタイル</div>
+      <div class="tab" data-t="af">🎯 AF</div>
+      <div class="tab" data-t="adv">⚙️ 高度</div>
+    </div>
+    <!-- 露出 -->
+    <div class="tcon on" id="tExp">
+      <div class="glnote">● ISO・EV・WB・スタイル → WebGLシェーダーで映像にリアルタイム反映（iOS対応）</div>
+      <div class="slg">
+        <div class="slr"><span class="sll f">F</span><div class="slt" data-p="apt"><div class="slf" style="width:35%;background:var(--yel);"></div><div class="slth" style="right:65%;border:2px solid var(--yel);"></div></div><span class="slv" id="vAP">f/2.8</span></div>
+        <div class="slr"><span class="sll ss">SS</span><div class="slt" data-p="ss"><div class="slf" style="width:60%;background:var(--blu);"></div><div class="slth" style="right:40%;border:2px solid var(--blu);"></div></div><span class="slv" id="vSS">1/500</span></div>
+        <div class="slr"><span class="sll iso">ISO</span><div class="slt" data-p="iso"><div class="slf" style="width:22%;background:var(--red);"></div><div class="slth" style="right:78%;border:2px solid var(--red);"></div></div><span class="slv" id="vIS">ISO200</span></div>
+        <div class="isoticks"><span class="isotick">100</span><span class="isotick">400</span><span class="isotick">1600</span><span class="isotick">6400</span><span class="isotick">25600</span></div>
+        <div class="slr"><span class="sll ev">EV</span><div class="slt" data-p="ev"><div class="slf" style="width:50%;background:rgba(255,255,255,.3);"></div><div class="slth" style="right:50%;border:2px solid rgba(255,255,255,.5);"></div></div><span class="slv" id="vEV">±0.0</span></div>
+      </div>
+      <div class="extr">
+        <div class="exbtn" id="xBurst">📸 連写OFF</div>
+        <div class="exbtn" id="xTimer">⏱ タイマーOFF</div>
+        <div class="exbtn" id="xHDR">HDR OFF</div>
+        <div class="exbtn" id="xFlash">⚡ 自動</div>
+      </div>
+    </div>
+    <!-- WB -->
+    <div class="tcon" id="tWb">
+      <div class="wbg" id="wbG">
+        <div class="wbcard" data-k="5500"><div class="wi">🔆</div><div class="wl">オートAWB</div></div>
+        <div class="wbcard on" data-k="5500"><div class="wi">☀️</div><div class="wl">太陽光</div></div>
+        <div class="wbcard" data-k="6500"><div class="wi">☁️</div><div class="wl">曇り</div></div>
+        <div class="wbcard" data-k="3200"><div class="wi">💡</div><div class="wl">電球</div></div>
+        <div class="wbcard" data-k="4000"><div class="wi">🔦</div><div class="wl">蛍光灯</div></div>
+        <div class="wbcard" data-k="7500"><div class="wi">🌥</div><div class="wl">日陰</div></div>
+      </div>
+      <div class="krow"><span class="klbl">K値</span><div class="ktr" id="kTR"><div class="kth" id="kTH"></div></div><span class="kval" id="kVL">5500K</span></div>
+    </div>
+    <!-- スタイル -->
+    <div class="tcon" id="tSty">
+      <div class="styg" id="styG">
+        <div class="stycard on" data-s="STD"><div class="styprev" style="background:linear-gradient(135deg,#2a3a2a,#4a6a4a);">標準</div><div class="styl">STANDARD</div></div>
+        <div class="stycard" data-s="VIVID"><div class="styprev" style="background:linear-gradient(135deg,#3a2a1a,#8a6a2a);filter:saturate(1.5);">鮮やか</div><div class="styl">VIVID</div></div>
+        <div class="stycard" data-s="MONO"><div class="styprev" style="background:linear-gradient(135deg,#2a2a2a,#666);filter:saturate(0);">白黒</div><div class="styl">MONO</div></div>
+        <div class="stycard" data-s="PORT"><div class="styprev" style="background:linear-gradient(135deg,#3a2a2a,#6a4a4a);">ポート</div><div class="styl">PORTRAIT</div></div>
+        <div class="stycard" data-s="LAND"><div class="styprev" style="background:linear-gradient(135deg,#1a3a1a,#2a6a2a);filter:saturate(1.8);">風景</div><div class="styl">LANDSCAPE</div></div>
+        <div class="stycard" data-s="LOG"><div class="styprev" style="background:linear-gradient(135deg,#1a1a1a,#2a2a2a);filter:contrast(.75);">LOG</div><div class="styl">FLAT/LOG</div></div>
+      </div>
+    </div>
+    <!-- AF -->
+    <div class="tcon" id="tAf">
+      <div class="afg" id="afG">
+        <div class="afcard on" data-a="ONE"><div class="afico">🎯</div><div><div class="aft">ONE SHOT</div><div class="afs">静止物・風景向け</div></div></div>
+        <div class="afcard" data-a="SERVO"><div class="afico">🔄</div><div><div class="aft">AI SERVO</div><div class="afs">動く被写体追従</div></div></div>
+        <div class="afcard" data-a="FACE"><div class="afico">👤</div><div><div class="aft">顔・瞳AF</div><div class="afs">人物ポートレート</div></div></div>
+        <div class="afcard" data-a="MF"><div class="afico">🔧</div><div><div class="aft">MFマニュアル</div><div class="afs">タップでピント</div></div></div>
+      </div>
+      <div class="afex">
+        <div class="afexbtn" id="xPeak">🔴 ピーキングOFF</div>
+        <div class="afexbtn on" id="xGrid">⊞ グリッドON</div>
+        <div class="afexbtn" id="xFlip">🔄 切替</div>
+      </div>
+    </div>
+    <!-- 高度設定 -->
+    <div class="tcon" id="tAdv">
+      <div class="advsec">
+        <div class="advt">🎬 タイムラプス / 🐢 スロー / 🎥 解像度 / 🦓 ゼブラ</div>
+        <div class="advr"><span class="advlbl">TL間隔</span><div class="advopts" id="tlO"><div class="advopt on" data-v="1s">1秒</div><div class="advopt" data-v="5s">5秒</div><div class="advopt" data-v="10s">10秒</div><div class="advopt" data-v="30s">30秒</div><div class="advopt" data-v="60s">1分</div></div></div>
+        <div class="advr"><span class="advlbl">スロー</span><div class="advopts" id="fpsO"><div class="advopt" data-v="60">60fps</div><div class="advopt on" data-v="120">120fps</div><div class="advopt" data-v="240">240fps</div></div></div>
+        <div class="advr"><span class="advlbl">解像度</span><div class="advopts" id="resO"><div class="advopt" data-v="4K">4K</div><div class="advopt on" data-v="1080p">1080p</div><div class="advopt" data-v="720p">720p</div></div></div>
+        <div class="advr"><span class="advlbl">ゼブラ</span><div class="advopts" id="zbO"><div class="advopt on" data-v="0">OFF</div><div class="advopt" data-v="0.8">80%</div><div class="advopt" data-v="0.95">95%</div><div class="advopt" data-v="1">100%</div></div></div>
+      </div>
+      <div class="advsec">
+        <div class="advt">💾 カスタム設定</div>
+        <div class="custrow">
+          <div class="custbtn" id="cS1">C1保存<br><small id="c1l" style="font-size:.36rem;opacity:.6;">未保存</small></div>
+          <div class="custbtn" id="cS2">C2保存<br><small id="c2l" style="font-size:.36rem;opacity:.6;">未保存</small></div>
+          <div class="custbtn" id="cL1" style="border-color:rgba(168,255,120,.2);color:var(--acc);">C1呼出</div>
+          <div class="custbtn" id="cL2" style="border-color:rgba(168,255,120,.2);color:var(--acc);">C2呼出</div>
+        </div>
+      </div>
+    </div>
+    <div class="pshr">
+      <div class="tprev" id="pTP"><div class="tprev-e">🖼</div></div>
+      <div class="psht" id="pSH"><div class="pshtf"></div></div>
+      <div class="prec" id="pRC"><div class="precf" id="pRF"></div></div>
+      <button class="pctrl" id="pFP">🔄</button>
+    </div>
+  </div>
+</div>
+<!-- GALLERY -->
+<div class="scr" id="sG">
+  <div class="ghd"><button class="backbtn" id="gBK">←</button><div class="gttl">📸 アルバム</div><div class="gcnt" id="gCNT">0枚</div></div>
+  <div class="mgrid" id="mgrid"><div class="emptg"><div class="ei">📷</div><p style="font-size:.72rem;">まだ写真・動画がありません</p></div></div>
+  <div class="bnav">
+    <div class="bni" id="gbn0"><div class="ni">🏠</div><div class="nl">ホーム</div></div>
+    <div class="bni" id="gbn1"><div class="ni">✨</div><div class="nl">かんたん</div></div>
+    <div class="bni" id="gbn2"><div class="ni">📷</div><div class="nl">PRO</div></div>
+    <div class="bni on"><div class="ni">🖼</div><div class="nl">アルバム</div></div>
+    <div class="bni" id="gbn4"><div class="ni">🧹</div><div class="nl">消去</div></div>
+  </div>
+</div>
+<!-- ERASER -->
+<div class="scr" id="sER">
+  <div class="erhd"><button class="backbtn" id="erBK">←</button><div class="erttl">🧹 AI消去</div></div>
+  <div class="erwrap"><img id="erImg"><canvas id="erCv"></canvas><div class="erno" id="erNO"><div class="ei">🖼</div><p>写真を選んでください</p><button class="erpick" id="erPK">📂 写真を選ぶ</button></div></div>
+  <div class="ertools">
+    <div class="ertool on" id="etB"><div class="ti">🖌</div>ブラシ</div>
+    <div class="ertool" id="etU"><div class="ti">↩</div>元に戻す</div>
+    <div class="ertool" id="etS"><div class="ti">💾</div>保存</div>
+  </div>
+  <div class="ersz"><span class="erszl">サイズ</span><div class="ersztr" id="erSZT"><div class="erszfill" id="erSZF"></div><div class="erszth" id="erSZTH"></div></div><span class="erszv" id="erSZV">40</span></div>
+  <button class="erai" id="erAI">✨ AIで自動消去する</button>
+  <div class="erst" id="erST"><span>💡</span><span>ブラシで消去エリアを塗ってください</span></div>
+  <div class="bnav">
+    <div class="bni" id="erbn0"><div class="ni">🏠</div><div class="nl">ホーム</div></div>
+    <div class="bni" id="erbn1"><div class="ni">✨</div><div class="nl">かんたん</div></div>
+    <div class="bni" id="erbn2"><div class="ni">📷</div><div class="nl">PRO</div></div>
+    <div class="bni" id="erbn3"><div class="ni">🖼</div><div class="nl">アルバム</div></div>
+    <div class="bni on"><div class="ni">🧹</div><div class="nl">消去</div></div>
+  </div>
+</div>
+<input type="file" id="erFILE" accept="image/*" style="display:none;">
+<div class="toast" id="toast"></div>
+<div id="ib"><div class="ibrow"><div class="ibico">📷</div><div><div class="ibt">PicAI Pro をインストール</div><div class="ibs">ホーム画面に追加するとアプリとして使えます</div></div><button class="ibx" id="ibX">✕</button></div><div class="ibbtns"><button class="ibinst" id="ibIN">📲 ホーム画面に追加</button><button class="iblater" id="ibLT">あとで</button></div></div>
+<div id="iosg"><div class="igcard"><div class="igt">📲 ホーム画面に追加する方法</div><div class="igs">Safariでこのページを開いてから以下の手順で追加できます</div><div class="igstep"><div class="ignum">1</div><div><div class="igst">画面下部の □↑ 共有ボタンをタップ</div><div class="igss">Safariの下部中央にあります</div></div></div><div class="igstep"><div class="ignum">2</div><div><div class="igst">「ホーム画面に追加」を選択</div></div></div><div class="igstep"><div class="ignum">3</div><div><div class="igst">「追加」をタップして完了！</div></div></div><button class="igclose" id="iosgCL">閉じる</button></div></div>
+<script>
+'use strict';
+// =====================================================
+// WebGL Camera Processor (CamGL)
+// ISO/EV/WB/Style/Peaking/Zebra/Zoom をGPUで映像に反映
+// =====================================================
+var CamGL=(function(){
+var VS='attribute vec2 p;attribute vec2 u;varying vec2 v;uniform float z;void main(){v=(u-.5)/z+.5;gl_Position=vec4(p,0,1);}';
+var FS=[
+'precision mediump float;',
+'varying vec2 v;uniform sampler2D t;',
+'uniform float ev,iso,sat,cont,vign,warm,zebra,peak;uniform vec2 res;',
+// Kelvin→RGB近似
+'vec3 K2RGB(float k){k/=100.0;float r,g,b;',
+'if(k<=66.0){r=1.0;g=clamp((99.47*log(k)-161.12)/255.0,0.0,1.0);}',
+'else{r=clamp((329.7*pow(k-60.0,-0.133))/255.0,0.0,1.0);g=clamp((288.1*pow(k-60.0,-0.076))/255.0,0.0,1.0);}',
+'if(k>=66.0)b=1.0;else if(k<=19.0)b=0.0;else b=clamp((138.5*log(k-10.0)-305.0)/255.0,0.0,1.0);',
+'return vec3(r,g,b);}',
+'void main(){',
+'if(v.x<0.0||v.x>1.0||v.y<0.0||v.y>1.0){gl_FragColor=vec4(0,0,0,1);return;}',
+'vec3 c=texture2D(t,v).rgb;',
+// EV + ISO
+'c*=pow(2.0,ev+log2(iso/100.0)*0.35);',
+// ISOノイズ
+'if(iso>1600.0){float n=(iso-1600.0)/24000.0*0.07;',
+'float nx=fract(sin(dot(v*999.0,vec2(12.99,78.23)))*43758.5);',
+'c+=vec3(nx*n,(1.0-nx)*n,nx*0.5*n);}',
+// WB（ケルビン値→RGB補正）
+'vec3 wb=K2RGB(warm);vec3 ref=K2RGB(55.0);',
+'c.r*=wb.r/max(ref.r,0.001);c.g*=wb.g/max(ref.g,0.001);c.b*=wb.b/max(ref.b,0.001);',
+// コントラスト
+'c=(c-0.5)*cont+0.5;',
+// 彩度
+'float L=dot(c,vec3(0.299,0.587,0.114));c=mix(vec3(L),c,sat);',
+// ビネット
+'if(vign>0.0){vec2 d=v-0.5;c*=1.0-vign*dot(d,d)*2.5;}',
+'c=clamp(c,0.0,1.0);',
+// ゼブラ
+'if(zebra>0.0){float br=dot(c,vec3(0.299,0.587,0.114));',
+'if(br>=zebra){float s=mod(floor(v.x*res.x+v.y*res.y),8.0);if(s<4.0)c=vec3(1.0,0.6,0.0);}}',
+// ピーキング
+'if(peak>0.0){vec2 px=1.0/res;vec3 l=texture2D(t,v-px).rgb,r2=texture2D(t,v+px).rgb;',
+'float e=length(r2-l)*4.0;if(e>0.3)c=mix(c,vec3(1,0,0),min(e,1.0));}',
+'gl_FragColor=vec4(c,1.0);}'].join('');
+
+function mk(gl,type,src){var s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s;}
+var STYLES={STD:{sat:1.0,cont:1.0,vign:0.0},VIVID:{sat:1.55,cont:1.2,vign:0.2},MONO:{sat:0.0,cont:1.15,vign:0.3},PORT:{sat:0.85,cont:0.92,vign:0.25},LAND:{sat:1.7,cont:1.1,vign:0.15},LOG:{sat:0.7,cont:0.72,vign:0.0}};
+
+function CamGL(vid,cv){
+  this.vid=vid;this.cv=cv;this.gl=null;this.prog=null;this.tex=null;this.buf=null;this.raf=null;
+  this.ev=0;this.iso=200;this.kelvin=5500;this.style='STD';this.zebra=0;this.peaking=false;this.zoom=1;
+  var gl=cv.getContext('webgl')||cv.getContext('experimental-webgl');
+  if(!gl)return;this.gl=gl;
+  var prog=gl.createProgram();
+  gl.attachShader(prog,mk(gl,gl.VERTEX_SHADER,VS));gl.attachShader(prog,mk(gl,gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);
+  this.prog=prog;
+  var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,0,1,1,-1,1,1,-1,1,0,0,1,1,1,0]),gl.STATIC_DRAW);this.buf=buf;
+  var tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  this.tex=tex;
+}
+CamGL.prototype.draw=function(){
+  var self=this;var gl=this.gl;
+  if(!gl){this.raf=requestAnimationFrame(function(){self.draw();});return;}
+  var v=this.vid;if(!v.readyState||v.readyState<2){this.raf=requestAnimationFrame(function(){self.draw();});return;}
+  if(this.cv.width!==this.cv.offsetWidth){this.cv.width=this.cv.offsetWidth;this.cv.height=this.cv.offsetHeight;}
+  gl.viewport(0,0,this.cv.width,this.cv.height);
+  gl.bindTexture(gl.TEXTURE_2D,this.tex);
+  try{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,v);}catch(e){}
+  gl.useProgram(this.prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER,this.buf);
+  var pp=gl.getAttribLocation(this.prog,'p'),pu=gl.getAttribLocation(this.prog,'u');
+  gl.enableVertexAttribArray(pp);gl.enableVertexAttribArray(pu);
+  gl.vertexAttribPointer(pp,2,gl.FLOAT,false,16,0);gl.vertexAttribPointer(pu,2,gl.FLOAT,false,16,8);
+  var sp=STYLES[this.style]||STYLES.STD;
+  var u=function(n){return gl.getUniformLocation(self.prog,n);};
+  gl.uniform1i(u('t'),0);gl.uniform1f(u('z'),this.zoom);gl.uniform1f(u('ev'),this.ev);gl.uniform1f(u('iso'),this.iso);
+  gl.uniform1f(u('sat'),sp.sat);gl.uniform1f(u('cont'),sp.cont);gl.uniform1f(u('vign'),sp.vign);
+  gl.uniform1f(u('warm'),this.kelvin);gl.uniform1f(u('zebra'),this.zebra);gl.uniform1f(u('peak'),this.peaking?1:0);
+  gl.uniform2f(u('res'),this.cv.width,this.cv.height);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  this.raf=requestAnimationFrame(function(){self.draw();});
+};
+CamGL.prototype.start=function(){this.draw();};
+CamGL.prototype.stop=function(){if(this.raf)cancelAnimationFrame(this.raf);this.raf=null;};
+CamGL.prototype.snap=function(dst){dst.width=this.cv.width;dst.height=this.cv.height;dst.getContext('2d').drawImage(this.cv,0,0);};
+return CamGL;
+})();
+
+// =====================================================
+// STATE
+// =====================================================
+var eS=null,pS=null,eG=null,pG=null;
+var eF='environment',pF='environment';
+var eMode='写真';
+var eIsR=false,pIsR=false;
+var eRec=null,pRec=null,eCh=[],pCh=[];
+var eRT2=null,pRT2=null,eRS=0,pRS=0;
+var media=[];
+var erCtx=null,erOrig=null,erBrush=40,erPaint=false;
+var proGridOn=true,eGridOn=true;
+var burstOn=false,pTimer=0,eTimer=0,hdrOn=false,flashI=0,pflashI=0;
+var custom={1:null,2:null};
+var eZoom=1,pZoom=1,pinchD=0,pinchOn=false;
+var advRun=false,advTmr=null,fbI=0;
+var evDrag=false,kDrag=false,slDrag=null,erSzD=false;
+var wbK=5500;
+var deferredPrompt=null;
+
+// =====================================================
+// NAV
+// =====================================================
+function go(id){
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
+  document.getElementById(id).classList.add('on');
+  if(id==='sG')renderGal();
+  if(id==='sH')renderHGrid();
+}
+function openE(mode){eMode=mode||'写真';go('sE');applyEMode();startE();}
+function openP(){go('sP');startP();}
+
+// HOME buttons
+document.getElementById('hE').addEventListener('click',function(){openE('写真');});
+document.getElementById('hV').addEventListener('click',function(){openE('動画');});
+document.getElementById('hP').addEventListener('click',function(){openP();});
+document.getElementById('hER').addEventListener('click',function(){go('sER');});
+document.getElementById('hG').addEventListener('click',function(){go('sG');});
+document.getElementById('bn0').addEventListener('click',function(){go('sH');});
+document.getElementById('bn1').addEventListener('click',function(){openE('写真');});
+document.getElementById('bn2').addEventListener('click',function(){openP();});
+document.getElementById('bn3').addEventListener('click',function(){go('sG');});
+document.getElementById('bn4').addEventListener('click',function(){go('sER');});
+
+// =====================================================
+// EASY CAM
+// =====================================================
+function startE(){
+  document.getElementById('eERR').classList.remove('show');
+  if(eS){eS.getTracks().forEach(function(t){t.stop();});eS=null;}
+  if(eG){eG.stop();eG=null;}
+  var audio=(eMode==='動画'||eMode==='スロー');
+  navigator.mediaDevices.getUserMedia({video:{facingMode:eF,width:{ideal:1920},height:{ideal:1080}},audio:audio})
+  .then(function(s){
+    eS=s;var v=document.getElementById('eVid');v.srcObject=s;v.play();
+    eG=new CamGL(v,document.getElementById('eGL'));eG.start();
+    eZoom=1;updLensE(1);
+    tryNativeCam(s);startAdv();toast('📷 カメラ起動しました');
+  }).catch(function(){document.getElementById('eERR').classList.add('show');});
+}
+function stopE(){
+  if(eG){eG.stop();eG=null;}
+  if(eS){eS.getTracks().forEach(function(t){t.stop();});eS=null;}
+  if(eIsR)stopER();stopAdv();
+}
+function applyEMode(){
+  var isV=(eMode==='動画'||eMode==='スロー'||eMode==='タイムラプス');
+  document.getElementById('eSH').style.display=isV?'none':'block';
+  document.getElementById('eRC').style.display=isV?'block':'none';
+}
+// iOS詳細制約
+function tryNativeCam(stream){
+  var t=stream.getVideoTracks()[0];if(!t)return;
+  try{var c=t.getCapabilities?t.getCapabilities():{};var adv={};
+    if(c.exposureMode)adv.exposureMode='continuous';
+    if(c.focusMode)adv.focusMode='continuous';
+    if(c.whiteBalanceMode)adv.whiteBalanceMode='continuous';
+    if(Object.keys(adv).length)t.applyConstraints({advanced:[adv]}).catch(function(){});
+  }catch(e){}
+}
+
+// PINCH ZOOM
+function setupPinch(scr){
+  var el=document.getElementById(scr);
+  el.addEventListener('touchstart',function(e){
+    if(e.touches.length===2){pinchOn=true;pinchD=pd(e);}
+  },{passive:true});
+  el.addEventListener('touchmove',function(e){
+    if(e.touches.length===2&&pinchOn){
+      e.preventDefault();
+      var d=pd(e),delta=d/pinchD;pinchD=d;
+      if(scr==='sE'){eZoom=Math.min(Math.max(eZoom*delta,0.5),10);applyZoom(eS,eG,eZoom,'eZB');updLensE(eZoom);}
+      else{pZoom=Math.min(Math.max(pZoom*delta,0.5),10);applyZoom(pS,pG,pZoom,'pZB');updLensP(pZoom);}
+    }
+  },{passive:false});
+  el.addEventListener('touchend',function(e){if(e.touches.length<2)pinchOn=false;},{passive:true});
+}
+function pd(e){var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;return Math.sqrt(dx*dx+dy*dy);}
+function applyZoom(stream,gl,z,badgeId){
+  if(gl)gl.zoom=z;
+  if(stream){var t=stream.getVideoTracks()[0];if(t&&t.getCapabilities){try{var c=t.getCapabilities();if(c&&c.zoom)t.applyConstraints({advanced:[{zoom:Math.min(Math.max(z,c.zoom.min||.5),c.zoom.max||10)}]}).catch(function(){});}catch(e){}}}
+  var b=document.getElementById(badgeId);b.textContent=z.toFixed(1)+'x';b.style.opacity='1';clearTimeout(b._t);b._t=setTimeout(function(){b.style.opacity='0';},1500);
+}
+function updLensE(z){['lUW','lW','lT'].forEach(function(i){document.getElementById(i).classList.remove('on');});document.getElementById(z<0.8?'lUW':z<2?'lW':'lT').classList.add('on');}
+function updLensP(z){['tUW','tW','tT'].forEach(function(i){document.getElementById(i).classList.remove('on');});document.getElementById(z<0.8?'tUW':z<2?'tW':'tT').classList.add('on');}
+setupPinch('sE');setupPinch('sP');
+
+// TAP FOCUS + EV POPUP (Easy)
+document.getElementById('sE').addEventListener('touchstart',function(e){
+  if(e.touches.length!==1)return;
+  if(e.target.closest('.ebtm')||e.target.closest('.etop')||e.target.closest('.aip')||e.target.closest('.lpill')||e.target.closest('.evpop'))return;
+  var t=e.touches[0];doFocus(t.clientX,t.clientY,'eFB',eS,'sE');showEV(t.clientX,t.clientY);
+},{passive:true});
+// TAP FOCUS (PRO)
+document.getElementById('sP').addEventListener('touchstart',function(e){
+  if(e.touches.length!==1)return;
+  if(e.target.closest('.pbtm')||e.target.closest('.ptop'))return;
+  var t=e.touches[0];doFocus(t.clientX,t.clientY,'pFB',pS,'sP');
+},{passive:true});
+function doFocus(cx,cy,boxId,stream,scrId){
+  var r=document.getElementById(scrId).getBoundingClientRect();
+  var x=(cx-r.left)/r.width*100,y=(cy-r.top)/r.height*100;
+  var box=document.getElementById(boxId);
+  box.style.left=Math.min(Math.max(x,8),92)+'%';box.style.top=Math.min(Math.max(y,8),92)+'%';
+  box.style.transform='translate(-50%,-50%) scale(1.14)';
+  setTimeout(function(){box.style.transform='translate(-50%,-50%) scale(1)';},240);
+  if(stream){var t=stream.getVideoTracks()[0];if(t&&t.getCapabilities){try{var c=t.getCapabilities();var adv={};if(c.focusMode)adv.focusMode='manual';if(c.pointsOfInterest)adv.pointsOfInterest=[{x:x/100,y:y/100}];if(c.exposureMode)adv.exposureMode='manual';if(Object.keys(adv).length)t.applyConstraints({advanced:[adv]}).catch(function(){});}catch(e){}}}
+}
+// EV POPUP
+function showEV(cx,cy){
+  var r=document.getElementById('sE').getBoundingClientRect();
+  var xp=(cx-r.left)/r.width*100,yp=(cy-r.top)/r.height*100;
+  var pop=document.getElementById('eEV');
+  pop.style.left=Math.min(xp+12>85?xp-14:xp+12,85)+'%';
+  pop.style.top=Math.min(Math.max(yp-25,8),65)+'%';
+  pop.classList.add('show');clearTimeout(pop._t);pop._t=setTimeout(function(){pop.classList.remove('show');},5000);
+}
+(function(){
+  var tr=document.getElementById('eEVT');
+  function mv(e){
+    if(!evDrag)return;
+    var r=tr.getBoundingClientRect();
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    var p=Math.min(Math.max((cy-r.top)/r.height,0),1);
+    var ev=((0.5-p)*6);
+    document.getElementById('eEVTH').style.top=(p*100)+'%';
+    document.getElementById('eEVF').style.bottom=((0.5-Math.min(p,0.5))*100)+'%';
+    document.getElementById('eEVF').style.height=(Math.abs(p-0.5)*100)+'%';
+    document.getElementById('eEVV').textContent=(ev>0?'+':'')+ev.toFixed(1);
+    if(eG)eG.ev=ev;
+    if(eS){var t=eS.getVideoTracks()[0];if(t&&t.getCapabilities){try{var c=t.getCapabilities();if(c.exposureCompensation){var mn=c.exposureCompensation.min,mx=c.exposureCompensation.max;t.applyConstraints({advanced:[{exposureMode:'manual',exposureCompensation:mn+(mx-mn)*(1-p)}]}).catch(function(){});}}catch(er){}}}
+    clearTimeout(document.getElementById('eEV')._t);document.getElementById('eEV')._t=setTimeout(function(){document.getElementById('eEV').classList.remove('show');},5000);
+  }
+  tr.addEventListener('touchstart',function(e){evDrag=true;mv(e);},{passive:true});
+  tr.addEventListener('touchmove',function(e){mv(e);},{passive:true});
+  tr.addEventListener('touchend',function(){evDrag=false;},{passive:true});
+  tr.addEventListener('mousedown',function(e){evDrag=true;mv(e);});
+  document.addEventListener('mousemove',function(e){mv(e);});
+  document.addEventListener('mouseup',function(){evDrag=false;});
+})();
+
+// MODE
+document.getElementById('eMR').addEventListener('click',function(e){
+  var item=e.target.closest('.mi');if(!item)return;
+  document.querySelectorAll('#eMR .mi').forEach(function(m){m.classList.remove('on');});item.classList.add('on');
+  eMode=item.dataset.m;applyEMode();
+  if(eS){eS.getTracks().forEach(function(t){t.stop();});eS=null;if(eG){eG.stop();eG=null;}}startE();toast('📷 '+eMode+'モード');
+});
+// TOP BUTTONS
+document.getElementById('eGRB').addEventListener('click',function(){eGridOn=!eGridOn;document.getElementById('eGR').style.opacity=eGridOn?'1':'0';toast(eGridOn?'⊞ グリッドON':'⊞ グリッドOFF');});
+var eFls=['⚡ 自動','⚡ ON','🚫 禁止'],eFI=0;
+document.getElementById('eFLB').addEventListener('click',function(){eFI=(eFI+1)%3;this.textContent=eFls[eFI];toast('フラッシュ: '+eFls[eFI]);});
+var eTms=['⏱ OFF','⏱ 3秒','⏱ 10秒'],eTI=0;
+document.getElementById('eTMB').addEventListener('click',function(){eTI=(eTI+1)%3;eTimer=[0,3,10][eTI];this.textContent=eTms[eTI];toast('タイマー: '+eTms[eTI]);});
+// LENS
+document.getElementById('lUW').addEventListener('click',function(){eZoom=0.5;applyZoom(eS,eG,0.5,'eZB');updLensE(0.5);toast('📷 0.5x');});
+document.getElementById('lW').addEventListener('click',function(){eZoom=1;applyZoom(eS,eG,1,'eZB');updLensE(1);toast('📷 1x');});
+document.getElementById('lT').addEventListener('click',function(){eZoom=3;applyZoom(eS,eG,3,'eZB');updLensE(3);toast('📷 3x');});
+// SHUTTER
+document.getElementById('eSH').addEventListener('click',function(){if(eTimer>0)runTmr('eTCD',eTimer,doESnap);else doESnap();});
+function doESnap(){snap('eGL','eCAP','eFL',eF,'eTP');}
+document.getElementById('eRC').addEventListener('click',function(){eIsR?stopER():startER();});
+function startER(){if(!eS)return;eCh=[];eRec=mkRec(eS,eCh,function(){saveVid(eCh,'eTP');});eRec.start(200);eIsR=true;document.getElementById('eRF').classList.add('on');document.getElementById('eRB').classList.add('show');eRS=0;eRT2=setInterval(function(){eRS++;document.getElementById('eRT').textContent=fmt(eRS);},1000);}
+function stopER(){if(eRec&&eRec.state!=='inactive')eRec.stop();eIsR=false;document.getElementById('eRF').classList.remove('on');document.getElementById('eRB').classList.remove('show');clearInterval(eRT2);document.getElementById('eRT').textContent='00:00';}
+document.getElementById('eFP').addEventListener('click',function(){eF=eF==='environment'?'user':'environment';startE();toast(eF==='user'?'🤳 フロント':'📷 バック');});
+document.getElementById('eCL').addEventListener('click',function(){stopE();go('sH');});
+document.getElementById('eR').addEventListener('click',startE);
+document.getElementById('eBK').addEventListener('click',function(){go('sH');});
+document.getElementById('eTP').addEventListener('click',function(){go('sG');});
+
+// =====================================================
+// PRO CAM
+// =====================================================
+function startP(){
+  document.getElementById('pERR').classList.remove('show');
+  if(pS){pS.getTracks().forEach(function(t){t.stop();});pS=null;}
+  if(pG){pG.stop();pG=null;}
+  navigator.mediaDevices.getUserMedia({video:{facingMode:pF,width:{ideal:1920},height:{ideal:1080}},audio:false})
+  .then(function(s){
+    pS=s;var v=document.getElementById('pVid');v.srcObject=s;v.play();
+    pG=new CamGL(v,document.getElementById('pGL'));pG.start();
+    pZoom=1;updLensP(1);tryNativeCam(s);toast('📷 PROカメラ起動（WebGL処理中）');
+  }).catch(function(){document.getElementById('pERR').classList.add('show');});
+}
+function stopP(){
+  if(pG){pG.stop();pG=null;}
+  if(pS){pS.getTracks().forEach(function(t){t.stop();});pS=null;}
+  if(pIsR)stopPR();
+}
+document.getElementById('pBK2').addEventListener('click',function(){stopP();go('sH');});
+document.getElementById('pR').addEventListener('click',startP);
+document.getElementById('pBK').addEventListener('click',function(){go('sH');});
+document.getElementById('pFP').addEventListener('click',function(){pF=pF==='environment'?'user':'environment';startP();toast(pF==='user'?'🤳 フロント':'📷 バック');});
+document.getElementById('pTP').addEventListener('click',function(){go('sG');});
+// 3眼
+document.getElementById('tUW').addEventListener('click',function(){pZoom=0.5;applyZoom(pS,pG,0.5,'pZB');updLensP(0.5);toast('📷 0.5x 超広角');});
+document.getElementById('tW').addEventListener('click',function(){pZoom=1;applyZoom(pS,pG,1,'pZB');updLensP(1);toast('📷 1x 広角');});
+document.getElementById('tT').addEventListener('click',function(){pZoom=3;applyZoom(pS,pG,3,'pZB');updLensP(3);toast('📷 3x 望遠');});
+// DIAL
+var dLbls={AUTO:'AUTO MODE',P:'P MODE',AV:'AV MODE',TV:'TV MODE',M:'MANUAL',B:'BULB',SCN:'SCENE',VID:'VIDEO'};
+document.getElementById('pDL').addEventListener('click',function(e){
+  var item=e.target.closest('.ditem');if(!item)return;
+  document.querySelectorAll('.ditem').forEach(function(d){d.classList.remove('on');});item.classList.add('on');
+  var m=item.dataset.d;document.getElementById('pML').textContent=dLbls[m]||m;
+  var isV=(m==='VID');document.getElementById('pSH').style.display=isV?'none':'flex';document.getElementById('pRC').style.display=isV?'flex':'none';
+  toast('📷 '+m+' モード');
+});
+// TABS
+document.getElementById('pTABS').addEventListener('click',function(e){
+  var btn=e.target.closest('.tab');if(!btn)return;
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
+  document.querySelectorAll('.tcon').forEach(function(c){c.classList.remove('on');});
+  btn.classList.add('on');
+  var m={exp:'tExp',wb:'tWb',sty:'tSty',af:'tAf',adv:'tAdv'};
+  var el=document.getElementById(m[btn.dataset.t]);if(el)el.classList.add('on');
+});
+// SLIDERS
+var aptV=['f/1.0','f/1.2','f/1.4','f/1.8','f/2.0','f/2.8','f/4.0','f/5.6','f/8.0','f/11','f/16','f/22'];
+var ssV=['1/4000','1/2000','1/1000','1/500','1/250','1/125','1/60','1/30','1/15','1/8','0.5"','1"','2"','4"','8"','15"','30"'];
+var isoV=[100,200,400,800,1600,3200,6400,12800,25600];
+document.querySelectorAll('.slt').forEach(function(tr){
+  var param=tr.dataset.p;
+  function mv(e){
+    if(slDrag!==param)return;
+    var r=tr.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var p=Math.min(Math.max((cx-r.left)/r.width*100,1),99);
+    tr.querySelector('.slf').style.width=p+'%';tr.querySelector('.slth').style.right=(100-p)+'%';
+    if(param==='apt'){var v=aptV[Math.round(p/100*(aptV.length-1))];document.getElementById('vAP').textContent=v;document.getElementById('hAP').textContent=v;}
+    else if(param==='ss'){var v2=ssV[Math.round(p/100*(ssV.length-1))];document.getElementById('vSS').textContent=v2;document.getElementById('hSS').textContent=v2;}
+    else if(param==='iso'){
+      var iv=isoV[Math.round(p/100*(isoV.length-1))];var vs='ISO'+iv;
+      document.getElementById('vIS').textContent=vs;document.getElementById('hIS').textContent=vs;
+      if(pG)pG.iso=iv;// WebGL反映
+      if(pS){var t=pS.getVideoTracks()[0];if(t&&t.getCapabilities){try{var c=t.getCapabilities();if(c.iso)t.applyConstraints({advanced:[{iso:iv}]}).catch(function(){});}catch(er){}}}
+    }
+    else if(param==='ev'){
+      var ev=((p-50)/50*3),evs=(ev>0?'+':'')+ev.toFixed(1);
+      document.getElementById('vEV').textContent=evs;document.getElementById('hEV').textContent=evs;
+      if(pG)pG.ev=ev;// WebGL反映
+      if(pS){var t2=pS.getVideoTracks()[0];if(t2&&t2.getCapabilities){try{var c2=t2.getCapabilities();if(c2.exposureCompensation){var mn=c2.exposureCompensation.min,mx=c2.exposureCompensation.max;t2.applyConstraints({advanced:[{exposureMode:'manual',exposureCompensation:mn+(mx-mn)*(p/100)}]}).catch(function(){});}catch(er2){}}}
+    }
+  }
+  function start(e){slDrag=param;mv(e);}
+  tr.addEventListener('touchstart',start,{passive:true});tr.addEventListener('touchmove',mv,{passive:true});tr.addEventListener('touchend',function(){slDrag=null;},{passive:true});
+  tr.addEventListener('mousedown',start);tr.addEventListener('mousemove',mv);tr.addEventListener('mouseup',function(){slDrag=null;});
+});
+// WB
+document.getElementById('wbG').addEventListener('click',function(e){
+  var card=e.target.closest('.wbcard');if(!card)return;
+  document.querySelectorAll('.wbcard').forEach(function(c){c.classList.remove('on');});card.classList.add('on');
+  var k=parseInt(card.dataset.k);wbK=k;if(pG)pG.kelvin=k;// WebGL反映
+  if(pS){var t=pS.getVideoTracks()[0];if(t&&t.getCapabilities){try{var c=t.getCapabilities();if(c.colorTemperature)t.applyConstraints({advanced:[{whiteBalanceMode:'manual',colorTemperature:k}]}).catch(function(){});}catch(er){}}}
+  toast('🌡 WB: '+k+'K');
+});
+(function(){
+  var tr=document.getElementById('kTR');
+  function mv(e){
+    if(!kDrag)return;
+    var r=tr.getBoundingClientRect();var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var p=Math.min(Math.max((cx-r.left)/r.width*100,1),99);
+    document.getElementById('kTH').style.right=(100-p)+'%';
+    var k=Math.round(2000+(p/100)*8000);wbK=k;document.getElementById('kVL').textContent=k+'K';
+    if(pG)pG.kelvin=k;// WebGL反映
+    if(pS){var t=pS.getVideoTracks()[0];if(t&&t.getCapabilities){try{var c=t.getCapabilities();if(c.colorTemperature)t.applyConstraints({advanced:[{whiteBalanceMode:'manual',colorTemperature:k}]}).catch(function(){});}catch(er){}}}
+  }
+  tr.addEventListener('touchstart',function(e){kDrag=true;mv(e);},{passive:true});tr.addEventListener('touchmove',function(e){mv(e);},{passive:true});tr.addEventListener('touchend',function(){kDrag=false;},{passive:true});
+  tr.addEventListener('mousedown',function(e){kDrag=true;mv(e);});document.addEventListener('mousemove',function(e){if(kDrag)mv(e);});document.addEventListener('mouseup',function(){kDrag=false;});
+})();
+// STYLE
+document.getElementById('styG').addEventListener('click',function(e){
+  var card=e.target.closest('.stycard');if(!card)return;
+  document.querySelectorAll('.stycard').forEach(function(c){c.classList.remove('on');});card.classList.add('on');
+  if(pG)pG.style=card.dataset.s;// WebGL反映
+  toast('🎨 '+card.dataset.s+' (WebGL処理)');
+});
+// AF
+document.getElementById('afG').addEventListener('click',function(e){
+  var card=e.target.closest('.afcard');if(!card)return;
+  document.querySelectorAll('.afcard').forEach(function(c){c.classList.remove('on');});card.classList.add('on');
+  if(pS){var t=pS.getVideoTracks()[0];if(t&&t.getCapabilities){try{var c=t.getCapabilities();if(c.focusMode){var fm=card.dataset.a==='MF'?'manual':'continuous';t.applyConstraints({advanced:[{focusMode:fm}]}).catch(function(){});}}catch(er){}}}
+  toast('🎯 AF: '+card.dataset.a);
+});
+document.getElementById('xPeak').addEventListener('click',function(){
+  var on=this.textContent.indexOf('OFF')>=0;this.textContent=on?'🔴 ピーキングON':'🔴 ピーキングOFF';
+  this.classList.toggle('on',on);if(pG)pG.peaking=on;toast(on?'🔴 ピーキングON（WebGL）':'ピーキングOFF');
+});
+document.getElementById('xGrid').addEventListener('click',function(){
+  proGridOn=!proGridOn;document.getElementById('pGR').style.opacity=proGridOn?'1':'0';
+  this.textContent=proGridOn?'⊞ グリッドON':'⊞ グリッドOFF';this.classList.toggle('on',proGridOn);toast(proGridOn?'⊞ グリッドON':'⊞ グリッドOFF');
+});
+document.getElementById('xFlip').addEventListener('click',function(){pF=pF==='environment'?'user':'environment';startP();toast(pF==='user'?'🤳 フロント':'📷 バック');});
+// ADV
+document.getElementById('tlO').addEventListener('click',function(e){var o=e.target.closest('.advopt');if(!o)return;document.querySelectorAll('#tlO .advopt').forEach(function(x){x.classList.remove('on');});o.classList.add('on');toast('TL間隔: '+o.dataset.v);});
+document.getElementById('fpsO').addEventListener('click',function(e){var o=e.target.closest('.advopt');if(!o)return;document.querySelectorAll('#fpsO .advopt').forEach(function(x){x.classList.remove('on');});o.classList.add('on');if(pS){var t=pS.getVideoTracks()[0];if(t)t.applyConstraints({frameRate:{ideal:parseInt(o.dataset.v)}}).catch(function(){});}toast('スロー: '+o.dataset.v+'fps');});
+document.getElementById('resO').addEventListener('click',function(e){var o=e.target.closest('.advopt');if(!o)return;document.querySelectorAll('#resO .advopt').forEach(function(x){x.classList.remove('on');});o.classList.add('on');var m={'4K':{width:3840,height:2160},'1080p':{width:1920,height:1080},'720p':{width:1280,height:720}};if(pS&&m[o.dataset.v]){var t=pS.getVideoTracks()[0];if(t)t.applyConstraints(m[o.dataset.v]).catch(function(){});}toast('解像度: '+o.dataset.v);});
+document.getElementById('zbO').addEventListener('click',function(e){var o=e.target.closest('.advopt');if(!o)return;document.querySelectorAll('#zbO .advopt').forEach(function(x){x.classList.remove('on');});o.classList.add('on');var z=parseFloat(o.dataset.v);if(pG)pG.zebra=z;toast('ゼブラ: '+o.textContent+' (WebGL)');});
+// EXTRAS (pro)
+document.getElementById('xBurst').addEventListener('click',function(){burstOn=!burstOn;this.textContent=burstOn?'📸 連写ON':'📸 連写OFF';this.classList.toggle('on',burstOn);toast(burstOn?'📸 連写ON':'📸 連写OFF');});
+var pTmrLs=['⏱ タイマーOFF','⏱ 2秒','⏱ 10秒'],pTI=0;
+document.getElementById('xTimer').addEventListener('click',function(){pTI=(pTI+1)%3;pTimer=[0,2,10][pTI];this.textContent=pTmrLs[pTI];this.classList.toggle('on',pTimer>0);toast('⏱ '+pTmrLs[pTI]);});
+document.getElementById('xHDR').addEventListener('click',function(){hdrOn=!hdrOn;this.textContent=hdrOn?'HDR ON':'HDR OFF';this.classList.toggle('on',hdrOn);toast(hdrOn?'✨ HDR ON':'HDR OFF');});
+var pFls=['⚡ 自動','⚡ ON','🚫 禁止','⚡ スロー'];
+document.getElementById('xFlash').addEventListener('click',function(){pflashI=(pflashI+1)%4;this.textContent=pFls[pflashI];this.classList.toggle('on',pflashI===1);toast('フラッシュ: '+pFls[pflashI]);});
+// CUSTOM
+document.getElementById('cS1').addEventListener('click',function(){custom[1]={iso:document.getElementById('vIS').textContent,ev:document.getElementById('vEV').textContent,k:wbK};document.getElementById('c1l').textContent=custom[1].iso;toast('💾 C1 保存');});
+document.getElementById('cS2').addEventListener('click',function(){custom[2]={iso:document.getElementById('vIS').textContent,ev:document.getElementById('vEV').textContent,k:wbK};document.getElementById('c2l').textContent=custom[2].iso;toast('💾 C2 保存');});
+document.getElementById('cL1').addEventListener('click',function(){if(!custom[1]){toast('⚠️ C1 未保存');return;}if(pG){pG.iso=parseInt(custom[1].iso.replace('ISO',''));pG.ev=parseFloat(custom[1].ev);pG.kelvin=custom[1].k;}toast('✅ C1 呼出: '+custom[1].iso);});
+document.getElementById('cL2').addEventListener('click',function(){if(!custom[2]){toast('⚠️ C2 未保存');return;}if(pG){pG.iso=parseInt(custom[2].iso.replace('ISO',''));pG.ev=parseFloat(custom[2].ev);pG.kelvin=custom[2].k;}toast('✅ C2 呼出: '+custom[2].iso);});
+// PRO SHUTTER
+document.getElementById('pSH').addEventListener('click',function(){if(pTimer>0)runTmr('pTCD',pTimer,doPSnap);else doPSnap();});
+function doPSnap(){if(burstOn)doBurst();else snap('pGL','pCAP','pFL',pF,'pTP');}
+function doBurst(){var n=0;toast('📸 連写開始…');var b=setInterval(function(){snap('pGL','pCAP','pFL',pF,'pTP');n++;if(n>=10){clearInterval(b);toast('📸 連写完了（10枚）');}},100);}
+document.getElementById('pRC').addEventListener('click',function(){pIsR?stopPR():startPR();});
+function startPR(){if(!pS)return;pCh=[];pRec=mkRec(pS,pCh,function(){saveVid(pCh,'pTP');});pRec.start(200);pIsR=true;document.getElementById('pRF').classList.add('on');document.getElementById('pRB').classList.add('show');pRS=0;pRT2=setInterval(function(){pRS++;document.getElementById('pRT').textContent=fmt(pRS);},1000);}
+function stopPR(){if(pRec&&pRec.state!=='inactive')pRec.stop();pIsR=false;document.getElementById('pRF').classList.remove('on');document.getElementById('pRB').classList.remove('show');clearInterval(pRT2);document.getElementById('pRT').textContent='00:00';}
+
+// =====================================================
+// CAPTURE UTILS
+// =====================================================
+function snap(glId,capId,flashId,facing,thumbId){
+  // WebGLで処理済みの映像をキャプチャ（ISO/WB/スタイル反映済み）
+  var glCv=document.getElementById(glId),cap=document.getElementById(capId);
+  if(glCv&&glCv.width>0){
+    cap.width=glCv.width;cap.height=glCv.height;cap.getContext('2d').drawImage(glCv,0,0);
+  }else{
+    var vid=document.getElementById(glId==='eGL'?'eVid':'pVid');
+    cap.width=vid.videoWidth||1920;cap.height=vid.videoHeight||1080;
+    var ctx=cap.getContext('2d');
+    if(facing==='user'){ctx.save();ctx.scale(-1,1);ctx.drawImage(vid,-cap.width,0,cap.width,cap.height);ctx.restore();}
+    else ctx.drawImage(vid,0,0,cap.width,cap.height);
+  }
+  cap.toBlob(function(blob){var url=URL.createObjectURL(blob);media.unshift({type:'photo',url:url,blob:blob});updThumbs();toast('📸 写真を保存しました！（WebGL処理済み）');},'image/jpeg',.92);
+  var f=document.getElementById(flashId);f.classList.add('go');setTimeout(function(){f.classList.remove('go');},380);
+}
+function mkRec(stream,chunks,onStop){
+  var mr;try{mr=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9,opus'});}catch(e){try{mr=new MediaRecorder(stream,{mimeType:'video/webm'});}catch(e2){mr=new MediaRecorder(stream);}}
+  mr.ondataavailable=function(e){if(e.data.size>0)chunks.push(e.data);};mr.onstop=onStop;return mr;
+}
+function saveVid(chunks,thumbId){var blob=new Blob(chunks,{type:'video/webm'});var url=URL.createObjectURL(blob);media.unshift({type:'video',url:url,blob:blob});updThumbs();toast('🎬 動画を保存しました！');}
+function updThumbs(){['eTP','pTP'].forEach(function(id){var el=document.getElementById(id);if(!el)return;if(media.length===0){el.innerHTML='<div class="tprev-e">🖼</div>';return;}var m=media[0];el.innerHTML=m.type==='photo'?'<img src="'+m.url+'">':'<video src="'+m.url+'" muted></video>';});renderHGrid();}
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function runTmr(id,secs,cb){var el=document.getElementById(id),n=secs;el.classList.add('show');el.textContent=n;var t=setInterval(function(){n--;if(n<=0){clearInterval(t);el.classList.remove('show');cb();}else el.textContent=n;},1000);}
+
+// =====================================================
+// AI ADVICE
+// =====================================================
+var fbAdvs=[
+  {sc:'📷 AI分析待機中',tx:'カメラを向けると<strong>AIが映像を分析</strong>してアドバイスします。'},
+  {sc:'🌿 自然・植物',tx:'<strong>三分割構図</strong>で交点に被写体を置くと◎'},
+  {sc:'👤 人物',tx:'<strong>目にタップ</strong>してピントを合わせよう。'},
+  {sc:'🌆 風景',tx:'地平線を<strong>1/3ライン</strong>に合わせると安定した構図に。'},
+  {sc:'🍽 料理',tx:'料理は<strong>斜め45度</strong>から。窓際の自然光が一番。'},
+  {sc:'🐾 動物',tx:'動物は<strong>目線の高さ</strong>まで下がって。連写で狙おう！'},
+];
+function startAdv(){advRun=true;showAdv(fbAdvs[0]);advTmr=setTimeout(runAdv,3000);}
+function stopAdv(){advRun=false;clearTimeout(advTmr);}
+function runAdv(){
+  if(!advRun)return;
+  var b64=capFr();
+  if(b64){setAP('🔍 AI分析中…','カメラ映像を<strong>リアルタイム分析</strong>中…');callAI(b64).then(function(r){if(r&&advRun)showAdv(r);else if(advRun){fbI=(fbI+1)%fbAdvs.length;showAdv(fbAdvs[fbI]);}if(advRun)advTmr=setTimeout(runAdv,8000);});}
+  else{fbI=(fbI+1)%fbAdvs.length;showAdv(fbAdvs[fbI]);if(advRun)advTmr=setTimeout(runAdv,8000);}
+}
+function capFr(){var v=document.getElementById('eVid');if(!v||!v.videoWidth)return null;var c=document.createElement('canvas');c.width=320;c.height=Math.round(v.videoHeight*320/v.videoWidth);c.getContext('2d').drawImage(v,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.6).split(',')[1];}
+function callAI(b64){return fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},{type:'text',text:'このカメラ映像を分析してスマホカメラの撮影アドバイスをJSON形式のみで返してください。{"sc":"シーン名と絵文字","tx":"具体的アドバイス1〜2文。重要語は<strong>タグ</strong>で強調"}他の文字は一切不要。'}]}]})}).then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(d){return JSON.parse(d.content[0].text.trim().replace(/```json|```/g,'').trim());}).catch(function(){return null;});}
+function showAdv(a){var p=document.getElementById('aip');p.style.opacity='0';setTimeout(function(){setAP(a.sc||a.scene,a.tx||a.advice||'');p.style.opacity='1';},200);}
+function setAP(sc,tx){document.getElementById('aiSC').textContent=sc;document.getElementById('aiTX').innerHTML=tx;}
+
+// =====================================================
+// GALLERY
+// =====================================================
+function renderGal(){
+  var g=document.getElementById('mgrid');document.getElementById('gCNT').textContent=media.length+'枚';
+  if(media.length===0){g.innerHTML='<div class="emptg"><div class="ei">📷</div><p style="font-size:.72rem;">まだ写真・動画がありません</p></div>';return;}
+  g.innerHTML=media.map(function(m,i){return m.type==='photo'?'<div class="mitem"><img src="'+m.url+'" loading="lazy"><button class="mdel" onclick="delM('+i+')">✕</button></div>':'<div class="mitem"><video src="'+m.url+'" muted></video><button class="mdel" onclick="delM('+i+')">✕</button></div>';}).join('');
+}
+function delM(i){URL.revokeObjectURL(media[i].url);media.splice(i,1);renderGal();updThumbs();toast('🗑 削除しました');}
+function renderHGrid(){
+  var g=document.getElementById('hgrid');
+  if(media.length===0){g.innerHTML='<div class="hthumb" style="grid-column:span 3;">まだありません</div>';return;}
+  g.innerHTML=media.slice(0,6).map(function(m){return m.type==='photo'?'<div class="hthumb" onclick="go(\'sG\')"><img src="'+m.url+'"></div>':'<div class="hthumb" onclick="go(\'sG\')"><video src="'+m.url+'" muted></video></div>';}).join('');
+}
+document.getElementById('gBK').addEventListener('click',function(){go('sH');});
+document.getElementById('gbn0').addEventListener('click',function(){go('sH');});
+document.getElementById('gbn1').addEventListener('click',function(){openE('写真');});
+document.getElementById('gbn2').addEventListener('click',function(){openP();});
+document.getElementById('gbn4').addEventListener('click',function(){go('sER');});
+
+// =====================================================
+// AI ERASER
+// =====================================================
+var erCtx2=null,erOrig2=null;
+document.getElementById('erBK').addEventListener('click',function(){go('sH');});
+document.getElementById('erbn0').addEventListener('click',function(){go('sH');});
+document.getElementById('erbn1').addEventListener('click',function(){openE('写真');});
+document.getElementById('erbn2').addEventListener('click',function(){openP();});
+document.getElementById('erbn3').addEventListener('click',function(){go('sG');});
+document.getElementById('erPK').addEventListener('click',function(){document.getElementById('erFILE').click();});
+document.getElementById('erFILE').addEventListener('change',function(e){
+  var file=e.target.files[0];if(!file)return;
+  var img=document.getElementById('erImg');
+  img.onload=function(){
+    img.style.display='block';document.getElementById('erNO').style.display='none';
+    var c=document.getElementById('erCv');c.style.display='block';c.width=img.naturalWidth;c.height=img.naturalHeight;c.style.width='100%';c.style.height='100%';
+    erCtx2=c.getContext('2d');erCtx2.drawImage(img,0,0);erOrig2=erCtx2.getImageData(0,0,c.width,c.height);
+    setupEr();toast('📸 読み込み完了');
+  };img.src=URL.createObjectURL(file);
+});
+function setupEr(){
+  var c=document.getElementById('erCv');
+  function gp(e){var r=c.getBoundingClientRect();var sx=c.width/r.width,sy=c.height/r.height;var cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}
+  function erase(pos){if(!erCtx2)return;erCtx2.save();erCtx2.globalCompositeOperation='destination-out';erCtx2.beginPath();erCtx2.arc(pos.x,pos.y,erBrush*2,0,Math.PI*2);erCtx2.fill();erCtx2.restore();document.getElementById('erST').innerHTML='<span>✅</span><span>消去エリア選択中。「AIで自動消去」を押してください。</span>';}
+  c.addEventListener('touchstart',function(e){e.preventDefault();erPaint=true;erase(gp(e));},{passive:false});
+  c.addEventListener('touchmove',function(e){e.preventDefault();if(erPaint)erase(gp(e));},{passive:false});
+  c.addEventListener('touchend',function(){erPaint=false;},{passive:true});
+  c.addEventListener('mousedown',function(e){erPaint=true;erase(gp(e));});
+  c.addEventListener('mousemove',function(e){if(erPaint)erase(gp(e));});
+  c.addEventListener('mouseup',function(){erPaint=false;});
+}
+document.getElementById('etB').addEventListener('click',function(){document.querySelectorAll('.ertool').forEach(function(t){t.classList.remove('on');});this.classList.add('on');});
+document.getElementById('etU').addEventListener('click',function(){
+  if(!erCtx2||!erOrig2)return;erCtx2.putImageData(erOrig2,0,0);
+  document.getElementById('erAI').textContent='✨ AIで自動消去する';document.getElementById('erAI').style.background='linear-gradient(135deg,var(--red),#ff6b35)';
+  document.getElementById('erST').innerHTML='<span>💡</span><span>ブラシで消去エリアを塗ってください</span>';toast('↩ 元に戻しました');
+});
+document.getElementById('etS').addEventListener('click',function(){
+  if(!erCtx2){toast('⚠️ 先に写真を選んでください');return;}
+  document.getElementById('erCv').toBlob(function(blob){var url=URL.createObjectURL(blob);media.unshift({type:'photo',url:url,blob:blob});updThumbs();renderHGrid();toast('💾 アルバムに保存しました！');},'image/jpeg',.92);
+});
+(function(){
+  var tr=document.getElementById('erSZT');
+  function mv(e){
+    if(!erSzD)return;
+    var r=tr.getBoundingClientRect();var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var p=Math.min(Math.max((cx-r.left)/r.width*100,5),95);
+    document.getElementById('erSZF').style.width=p+'%';document.getElementById('erSZTH').style.right=(100-p)+'%';
+    erBrush=Math.round(p*.8+5);document.getElementById('erSZV').textContent=erBrush;
+  }
+  tr.addEventListener('touchstart',function(e){erSzD=true;mv(e);},{passive:true});tr.addEventListener('touchmove',function(e){mv(e);},{passive:true});tr.addEventListener('touchend',function(){erSzD=false;},{passive:true});
+  tr.addEventListener('mousedown',function(e){erSzD=true;mv(e);});document.addEventListener('mousemove',function(e){if(erSzD)mv(e);});document.addEventListener('mouseup',function(){erSzD=false;});
+})();
+document.getElementById('erAI').addEventListener('click',function(){
+  if(!erCtx2){toast('⚠️ 先に写真を選んでください');return;}
+  var btn=this;btn.textContent='✨ AI処理中…';btn.style.opacity='.65';
+  setTimeout(function(){
+    var c=document.getElementById('erCv'),d=erCtx2.getImageData(0,0,c.width,c.height);
+    var data=d.data,w=c.width,h=c.height;
+    for(var y=0;y<h;y++)for(var x=0;x<w;x++){var i=(y*w+x)*4;if(data[i+3]<128){var r2=0,g2=0,b2=0,cnt=0;for(var dy=-10;dy<=10;dy++)for(var dx=-10;dx<=10;dx++){var nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=w||ny>=h)continue;var ni=(ny*w+nx)*4;if(data[ni+3]>=128){r2+=data[ni];g2+=data[ni+1];b2+=data[ni+2];cnt++;}}if(cnt>0){data[i]=r2/cnt;data[i+1]=g2/cnt;data[i+2]=b2/cnt;data[i+3]=255;}}}
+    erCtx2.putImageData(d,0,0);btn.textContent='✅ 消去完了！';btn.style.opacity='1';btn.style.background='linear-gradient(135deg,#00b894,#00cec9)';
+    document.getElementById('erST').innerHTML='<span>🎉</span><span><strong>AIでキレイに消去！</strong> 保存しましょう。</span>';toast('✅ 消去完了！');
+  },1500);
+});
+
+// =====================================================
+// TOAST
+// =====================================================
+var toastT=null;
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2200);}
+
+// =====================================================
+// PWA
+// =====================================================
+var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+var isSA=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;if(!isSA&&!sessionStorage.getItem('pd'))setTimeout(function(){document.getElementById('ib').classList.add('show');},3000);});
+if(isIOS&&!isSA&&!sessionStorage.getItem('pd'))setTimeout(function(){document.getElementById('ib').classList.add('show');},3000);
+document.getElementById('ibX').addEventListener('click',function(){document.getElementById('ib').classList.remove('show');sessionStorage.setItem('pd','1');});
+document.getElementById('ibLT').addEventListener('click',function(){document.getElementById('ib').classList.remove('show');sessionStorage.setItem('pd','1');});
+document.getElementById('ibIN').addEventListener('click',function(){
+  if(isIOS){document.getElementById('ib').classList.remove('show');document.getElementById('iosg').classList.add('show');return;}
+  if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(function(){deferredPrompt=null;document.getElementById('ib').classList.remove('show');});}
+});
+document.getElementById('iosgCL').addEventListener('click',function(){document.getElementById('iosg').classList.remove('show');});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
+}
+</script>
+</body>
+</html>

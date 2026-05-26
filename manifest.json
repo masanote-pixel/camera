@@ -1,0 +1,23 @@
+{
+  "name": "PicAI カメラ",
+  "short_name": "PicAI",
+  "description": "AI搭載の高機能カメラアプリ。初心者でもプロっぽく撮れる！",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "lang": "ja",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    { "src": "screenshot.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow" }
+  ],
+  "categories": ["photo", "utilities"],
+  "shortcuts": [
+    { "name": "写真を撮る", "short_name": "写真", "url": "./index.html#photo", "icons": [{"src": "icon-192.png", "sizes": "192x192"}] },
+    { "name": "動画を撮る", "short_name": "動画", "url": "./index.html#video", "icons": [{"src": "icon-192.png", "sizes": "192x192"}] }
+  ]
+}
