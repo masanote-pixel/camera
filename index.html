@@ -54,7 +54,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 /* CAMERA BASE */
 #sE,#sP{background:#000;}
 .vid-hidden{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
-.glcv{position:absolute;inset:0;width:100%;height:100%;z-index:1;}
+/* glcv削除 */
 .capcv{display:none;}
 .cflash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:60;transition:opacity .05s;}
 .cflash.go{opacity:.9;transition:opacity .35s;}
@@ -328,8 +328,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 </div>
 <!-- EASY CAM -->
 <div class="scr" id="sE">
-  <video class="vid-hidden" id="eVid" autoplay playsinline muted></video>
-  <canvas class="glcv" id="eGL"></canvas>
+  <video id="eVid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;"></video>
   <canvas class="capcv" id="eCAP"></canvas>
   <div class="cflash" id="eFL"></div>
   <div class="cerr" id="eERR">
@@ -380,8 +379,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 </div>
 <!-- PRO CAM -->
 <div class="scr" id="sP">
-  <video class="vid-hidden" id="pVid" autoplay playsinline muted></video>
-  <canvas class="glcv" id="pGL"></canvas>
+  <video id="pVid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;transition:filter .3s;"></video>
   <canvas class="capcv" id="pCAP"></canvas>
   <div class="cflash" id="pFL"></div>
   <div class="cerr" id="pERR">
@@ -689,13 +687,12 @@ function startE(){
   navigator.mediaDevices.getUserMedia({video:{facingMode:eF,width:{ideal:1920},height:{ideal:1080}},audio:false})
   .then(function(s){
     eS=s;var v=document.getElementById('eVid');v.srcObject=s;v.play();
-    eG=new CamGL(v,document.getElementById('eGL'));eG.start();
+    // WebGL不使用
     eZoom=1;updLensE(1);
     tryNativeCam(s);startAdv();toast('📷 カメラ起動しました');
   }).catch(function(){document.getElementById('eERR').classList.add('show');});
 }
 function stopE(){
-  if(eG){eG.stop();eG=null;}
   if(eS){eS.getTracks().forEach(function(t){t.stop();});eS=null;}
   if(eIsR)stopER();stopAdv();
 }
@@ -834,12 +831,11 @@ function startP(){
   navigator.mediaDevices.getUserMedia({video:{facingMode:pF,width:{ideal:1920},height:{ideal:1080}},audio:false})
   .then(function(s){
     pS=s;var v=document.getElementById('pVid');v.srcObject=s;v.play();
-    pG=new CamGL(v,document.getElementById('pGL'));pG.start();
+    // WebGL不使用
     pZoom=1;updLensP(1);tryNativeCam(s);toast('📷 PROカメラ起動（WebGL処理中）');
   }).catch(function(){document.getElementById('pERR').classList.add('show');});
 }
 function stopP(){
-  if(pG){pG.stop();pG=null;}
   if(pS){pS.getTracks().forEach(function(t){t.stop();});pS=null;}
   if(pIsR)stopPR();
 }
@@ -887,13 +883,11 @@ document.querySelectorAll('.slt').forEach(function(tr){
     else if(param==='iso'){
       var iv=isoV[Math.round(p/100*(isoV.length-1))];var vs='ISO'+iv;
       document.getElementById('vIS').textContent=vs;document.getElementById('hIS').textContent=vs;
-      if(pG)pG.iso=iv;// WebGL反映
       if(pS){try{var t=pS.getVideoTracks()[0];if(t){var c=t.getCapabilities?t.getCapabilities():{};if(c.iso)t.applyConstraints({advanced:[{iso:iv}]}).catch(function(){});}}catch(er){}}
     }
     else if(param==='ev'){
       var ev=((p-50)/50*3),evs=(ev>0?'+':'')+ev.toFixed(1);
       document.getElementById('vEV').textContent=evs;document.getElementById('hEV').textContent=evs;
-      if(pG)pG.ev=ev;// WebGL反映
       if(pS){try{var t2=pS.getVideoTracks()[0];if(t2){var c2=t2.getCapabilities?t2.getCapabilities():{};if(c2.exposureCompensation){var mn=c2.exposureCompensation.min,mx=c2.exposureCompensation.max;t2.applyConstraints({advanced:[{exposureMode:'manual',exposureCompensation:mn+(mx-mn)*(p/100)}]}).catch(function(){});}}}catch(er2){}}
     }
   }
@@ -917,7 +911,6 @@ document.getElementById('wbG').addEventListener('click',function(e){
     var p=Math.min(Math.max((cx-r.left)/r.width*100,1),99);
     document.getElementById('kTH').style.right=(100-p)+'%';
     var k=Math.round(2000+(p/100)*8000);wbK=k;document.getElementById('kVL').textContent=k+'K';
-    if(pG)pG.kelvin=k;// WebGL反映
     if(pS){try{var t=pS.getVideoTracks()[0];if(t){var c=t.getCapabilities?t.getCapabilities():{};if(c.colorTemperature)t.applyConstraints({advanced:[{whiteBalanceMode:'manual',colorTemperature:k}]}).catch(function(){});}}catch(er){}}
   }
   tr.addEventListener('touchstart',function(e){kDrag=true;mv(e);},{passive:true});tr.addEventListener('touchmove',function(e){mv(e);},{passive:true});tr.addEventListener('touchend',function(){kDrag=false;},{passive:true});
@@ -927,8 +920,10 @@ document.getElementById('wbG').addEventListener('click',function(e){
 document.getElementById('styG').addEventListener('click',function(e){
   var card=e.target.closest('.stycard');if(!card)return;
   document.querySelectorAll('.stycard').forEach(function(c){c.classList.remove('on');});card.classList.add('on');
-  if(pG)pG.style=card.dataset.s;// WebGL反映
-  toast('🎨 '+card.dataset.s+' (WebGL処理)');
+  // CSS filterでスタイル適用（videoに直接）
+  var flt={STD:'none',VIVID:'saturate(1.6) contrast(1.1)',MONO:'saturate(0) contrast(1.1)',PORT:'saturate(0.85) contrast(0.95)',LAND:'saturate(1.8) contrast(1.05)',LOG:'contrast(0.75) brightness(1.1)'};
+  document.getElementById('pVid').style.filter=flt[card.dataset.s]||'none';
+  toast('🎨 '+card.dataset.s);
 });
 // AF
 document.getElementById('afG').addEventListener('click',function(e){
@@ -939,7 +934,8 @@ document.getElementById('afG').addEventListener('click',function(e){
 });
 document.getElementById('xPeak').addEventListener('click',function(){
   var on=this.textContent.indexOf('OFF')>=0;this.textContent=on?'🔴 ピーキングON':'🔴 ピーキングOFF';
-  this.classList.toggle('on',on);if(pG)pG.peaking=on;toast(on?'🔴 ピーキングON（WebGL）':'ピーキングOFF');
+  this.classList.toggle('on',on);
+  toast(on?'🔴 ピーキングON':'ピーキングOFF');
 });
 document.getElementById('xGrid').addEventListener('click',function(){
   proGridOn=!proGridOn;document.getElementById('pGR').style.opacity=proGridOn?'1':'0';
@@ -975,17 +971,13 @@ function stopPR(){if(pRec&&pRec.state!=='inactive')pRec.stop();pIsR=false;docume
 // CAPTURE UTILS
 // =====================================================
 function snap(glId,capId,flashId,facing,thumbId){
-  // WebGLで処理済みの映像をキャプチャ（ISO/WB/スタイル反映済み）
-  var glCv=document.getElementById(glId),cap=document.getElementById(capId);
-  if(glCv&&glCv.width>0){
-    cap.width=glCv.width;cap.height=glCv.height;cap.getContext('2d').drawImage(glCv,0,0);
-  }else{
-    var vid=document.getElementById(glId==='eGL'?'eVid':'pVid');
-    cap.width=vid.videoWidth||1920;cap.height=vid.videoHeight||1080;
-    var ctx=cap.getContext('2d');
-    if(facing==='user'){ctx.save();ctx.scale(-1,1);ctx.drawImage(vid,-cap.width,0,cap.width,cap.height);ctx.restore();}
-    else ctx.drawImage(vid,0,0,cap.width,cap.height);
-  }
+  // videoから直接キャプチャ
+  var vid=document.getElementById(glId==='eGL'?'eVid':'pVid');
+  var cap=document.getElementById(capId);
+  cap.width=vid.videoWidth||1920;cap.height=vid.videoHeight||1080;
+  var ctx=cap.getContext('2d');
+  if(facing==='user'){ctx.save();ctx.scale(-1,1);ctx.drawImage(vid,-cap.width,0,cap.width,cap.height);ctx.restore();}
+  else ctx.drawImage(vid,0,0,cap.width,cap.height);
   cap.toBlob(function(blob){var url=URL.createObjectURL(blob);media.unshift({type:'photo',url:url,blob:blob});updThumbs();toast('📸 保存しました！');},'image/jpeg',.92);
   // シャッター音を抑制（AudioContextで無音を再生）
   try{
@@ -1027,7 +1019,7 @@ function togglePbtm(){
 // スワイプで折りたたみ
 (function(){
   var startY=0, startCollapsed=false;
-  document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(function(){
     var handle=document.getElementById('pHandle');
     if(!handle) return;
     handle.addEventListener('touchstart',function(e){
@@ -1041,7 +1033,7 @@ function togglePbtm(){
       else if(dy<-30 && startCollapsed) togglePbtm(); // 上スワイプ→展開
       e.stopPropagation();
     },{passive:true});
-  });
+  },100);
 })();
 
 var aipOpen=true;
