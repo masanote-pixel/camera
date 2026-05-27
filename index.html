@@ -127,13 +127,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 .tprev{width:46px;height:46px;border-radius:9px;overflow:hidden;background:var(--s2);border:2px solid rgba(255,255,255,.25);cursor:pointer;flex-shrink:0;}
 .tprev img,.tprev video{width:100%;height:100%;object-fit:cover;}
 .tprev-e{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1rem;}
-.shbtn{width:76px;height:76px;position:relative;cursor:pointer;flex-shrink:0;}
+.shbtn{width:70px;height:70px;position:relative;cursor:pointer;flex-shrink:0;}
 .shring{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(255,255,255,.7);}
-.shfill{position:absolute;inset:6px;border-radius:50%;background:#fff;transition:transform .1s;}
+.shfill{position:absolute;inset:5px;border-radius:50%;background:#fff;transition:transform .1s;}
 .shbtn:active .shfill{transform:scale(.88);}
-.recbtn{width:76px;height:76px;position:relative;cursor:pointer;flex-shrink:0;display:none;}
+.recbtn{width:70px;height:70px;position:relative;cursor:pointer;flex-shrink:0;display:none;}
 .recring{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(255,255,255,.7);}
-.recfill{position:absolute;inset:6px;border-radius:50%;background:var(--red);transition:all .3s;}
+.recfill{position:absolute;inset:5px;border-radius:50%;background:var(--red);transition:all .3s;}
 .recfill.on{border-radius:9px;inset:17px;}
 .sidebtn{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:.95rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 /* PRO TOP */
@@ -157,7 +157,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 /* PRO BOTTOM */
 .pbtm{position:absolute;bottom:0;left:0;right:0;z-index:5;background:rgba(0,0,0,.94);
   backdrop-filter:blur(24px);border-top:1px solid rgba(255,255,255,.1);
-  padding:5px 11px calc(var(--sb)+7px);}
+  padding:5px 11px calc(var(--sb)+7px);
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  touch-action:none;}
+/* ドラッグハンドル */
+.pbtm-handle{display:flex;justify-content:center;align-items:center;padding:2px 0 4px;cursor:pointer;touch-action:none;}
+.pbtm-bar{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.25);}
+/* 折りたたみ時はシャッター行だけ表示 */
+.pbtm.collapsed .tri,
+.pbtm.collapsed .dial,
+.pbtm.collapsed .tabs,
+.pbtm.collapsed .tcon{display:none;}
+.pbtm.collapsed .pbtm-bar{background:rgba(255,255,255,.5);}
 /* 3眼 */
 .tri{display:flex;justify-content:center;margin-bottom:5px;}
 .tribtn{padding:4px 12px;background:rgba(255,255,255,.06);border:none;color:var(--t2);
@@ -334,9 +345,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
   <div class="zbadge" id="eZB">1.0x</div>
   <div class="rbadge" id="eRB"><div class="rdot"></div><div class="rtime" id="eRT">00:00</div></div>
   <div class="tcd" id="eTCD"></div>
-  <div class="aip" id="aip">
-    <div class="aiphd"><div class="aipdot"></div><span class="aiplbl">AIアドバイス</span><span class="aipsc" id="aiSC">📷 準備完了</span></div>
-    <div class="aiptxt" id="aiTX">カメラを向けると<strong>AIが映像を分析</strong>してアドバイスします。</div>
+  <div class="aip" id="aip" onclick="toggleAIP()">
+    <div class="aiphd"><div class="aipdot"></div><span class="aiplbl">AIアドバイス</span><span class="aipsc" id="aiSC">📷 準備完了</span><span style="font-size:.45rem;color:rgba(168,255,120,.5);margin-left:4px;" id="aipToggle">▲</span></div>
+    <div class="aiptxt" id="aiTX" style="display:block;">カメラを向けると<strong>AIが映像を分析</strong>してアドバイスします。</div>
   </div>
   <div class="etop">
     <button class="eclosebtn" id="eCL">✕</button>
@@ -398,7 +409,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
     <div class="pmlbl" id="pML">AV MODE</div>
     <div style="font-size:.52rem;color:rgba(255,255,255,.5);font-family:monospace;">WebGL Pro</div>
   </div>
-  <div class="pbtm">
+  <div class="pbtm" id="pBtm">
+    <!-- ドラッグハンドル -->
+    <div class="pbtm-handle" id="pHandle" onclick="togglePbtm()"><div class="pbtm-bar"></div></div>
     <div class="tri">
       <button class="tribtn" id="tUW">0.5x<br><span style="font-size:.34rem;opacity:.6;">超広角</span></button>
       <button class="tribtn on" id="tW">1x<br><span style="font-size:.34rem;opacity:.6;">広角</span></button>
@@ -562,8 +575,11 @@ var FS=[
 'float nx=fract(sin(dot(v*999.0,vec2(12.99,78.23)))*43758.5);',
 'c+=vec3(nx*n,(1.0-nx)*n,nx*0.5*n);}',
 // WB（ケルビン値→RGB補正）
+// WB: warm=5500のとき補正なし
 'vec3 wb=K2RGB(warm);vec3 ref=K2RGB(55.0);',
-'c.r*=wb.r/max(ref.r,0.001);c.g*=wb.g/max(ref.g,0.001);c.b*=wb.b/max(ref.b,0.001);',
+'float wr=wb.r/max(ref.r,0.001),wg=wb.g/max(ref.g,0.001),wb2=wb.b/max(ref.b,0.001);',
+'float wmax=max(wr,max(wg,wb2));',
+'c.r*=wr/wmax;c.g*=wg/wmax;c.b*=wb2/wmax;',
 // コントラスト
 'c=(c-0.5)*cont+0.5;',
 // 彩度
@@ -676,8 +692,8 @@ function startE(){
   document.getElementById('eERR').classList.remove('show');
   if(eS){eS.getTracks().forEach(function(t){t.stop();});eS=null;}
   if(eG){eG.stop();eG=null;}
-  var audio=(eMode==='動画'||eMode==='スロー');
-  navigator.mediaDevices.getUserMedia({video:{facingMode:eF,width:{ideal:1920},height:{ideal:1080}},audio:audio})
+  var audio=false; // 音声は常にOFF
+  navigator.mediaDevices.getUserMedia({video:{facingMode:eF,width:{ideal:1920},height:{ideal:1080}},audio:false})
   .then(function(s){
     eS=s;var v=document.getElementById('eVid');v.srcObject=s;v.play();
     eG=new CamGL(v,document.getElementById('eGL'));eG.start();
@@ -1000,6 +1016,39 @@ var fbAdvs=[
   {sc:'🍽 料理',tx:'料理は<strong>斜め45度</strong>から。窓際の自然光が一番。'},
   {sc:'🐾 動物',tx:'動物は<strong>目線の高さ</strong>まで下がって。連写で狙おう！'},
 ];
+// PRO設定パネル 折りたたみ
+var pbtmCollapsed=false;
+function togglePbtm(){
+  pbtmCollapsed=!pbtmCollapsed;
+  var el=document.getElementById('pBtm');
+  if(el) el.classList.toggle('collapsed', pbtmCollapsed);
+}
+// スワイプで折りたたみ
+(function(){
+  var startY=0, startCollapsed=false;
+  document.addEventListener('DOMContentLoaded', function(){
+    var handle=document.getElementById('pHandle');
+    if(!handle) return;
+    handle.addEventListener('touchstart',function(e){
+      startY=e.touches[0].clientY;
+      startCollapsed=pbtmCollapsed;
+      e.stopPropagation();
+    },{passive:true});
+    handle.addEventListener('touchend',function(e){
+      var dy=e.changedTouches[0].clientY-startY;
+      if(dy>30 && !startCollapsed) togglePbtm();      // 下スワイプ→折りたたむ
+      else if(dy<-30 && startCollapsed) togglePbtm(); // 上スワイプ→展開
+      e.stopPropagation();
+    },{passive:true});
+  });
+})();
+
+var aipOpen=true;
+function toggleAIP(){
+  aipOpen=!aipOpen;
+  document.getElementById('aiTX').style.display=aipOpen?'block':'none';
+  document.getElementById('aipToggle').textContent=aipOpen?'▲':'▼';
+}
 function startAdv(){advRun=true;showAdv(fbAdvs[0]);advTmr=setTimeout(runAdv,3000);}
 function stopAdv(){advRun=false;clearTimeout(advTmr);}
 function runAdv(){
