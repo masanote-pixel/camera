@@ -436,7 +436,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
       <div class="slg">
         <div class="slr"><span class="sll f">F</span><div class="slt" data-p="apt"><div class="slf" style="width:35%;background:var(--yel);"></div><div class="slth" style="right:65%;border:2px solid var(--yel);"></div></div><span class="slv" id="vAP">f/2.8</span></div>
         <div class="slr"><span class="sll ss">SS</span><div class="slt" data-p="ss"><div class="slf" style="width:60%;background:var(--blu);"></div><div class="slth" style="right:40%;border:2px solid var(--blu);"></div></div><span class="slv" id="vSS">1/500</span></div>
-        <div class="slr"><span class="sll iso">ISO</span><div class="slt" data-p="iso"><div class="slf" style="width:22%;background:var(--red);"></div><div class="slth" style="right:78%;border:2px solid var(--red);"></div></div><span class="slv" id="vIS">ISO200</span></div>
+        <div class="slr"><span class="sll iso">ISO</span><div class="slt" data-p="iso"><div class="slf" style="width:12%;background:var(--red);"></div><div class="slth" style="right:88%;border:2px solid var(--red);"></div></div><span class="slv" id="vIS">ISO200</span></div>
         <div class="isoticks"><span class="isotick">100</span><span class="isotick">400</span><span class="isotick">1600</span><span class="isotick">6400</span><span class="isotick">25600</span></div>
         <div class="slr"><span class="sll ev">EV</span><div class="slt" data-p="ev"><div class="slf" style="width:50%;background:rgba(255,255,255,.3);"></div><div class="slth" style="right:50%;border:2px solid rgba(255,255,255,.5);"></div></div><span class="slv" id="vEV">±0.0</span></div>
       </div>
@@ -575,11 +575,14 @@ var FS=[
 'float nx=fract(sin(dot(v*999.0,vec2(12.99,78.23)))*43758.5);',
 'c+=vec3(nx*n,(1.0-nx)*n,nx*0.5*n);}',
 // WB（ケルビン値→RGB補正）
-// WB: warm=5500のとき補正なし
-'vec3 wb=K2RGB(warm);vec3 ref=K2RGB(55.0);',
-'float wr=wb.r/max(ref.r,0.001),wg=wb.g/max(ref.g,0.001),wb2=wb.b/max(ref.b,0.001);',
-'float wmax=max(wr,max(wg,wb2));',
-'c.r*=wr/wmax;c.g*=wg/wmax;c.b*=wb2/wmax;',
+// WB: 5500K基準の相対補正（シンプル版）
+'if(warm>0.0){',
+'  vec3 wb=K2RGB(warm);',
+'  float avg=(wb.r+wb.g+wb.b)/3.0;',
+'  c.r*=avg/max(wb.r,0.001);',
+'  c.g*=avg/max(wb.g,0.001);',
+'  c.b*=avg/max(wb.b,0.001);',
+'}',
 // コントラスト
 'c=(c-0.5)*cont+0.5;',
 // 彩度
@@ -994,6 +997,14 @@ function snap(glId,capId,flashId,facing,thumbId){
     else ctx.drawImage(vid,0,0,cap.width,cap.height);
   }
   cap.toBlob(function(blob){var url=URL.createObjectURL(blob);media.unshift({type:'photo',url:url,blob:blob});updThumbs();toast('📸 写真を保存しました！（WebGL処理済み）');},'image/jpeg',.92);
+  // シャッター音を抑制（AudioContextで無音を再生）
+  try{
+    var ac=new(window.AudioContext||window.webkitAudioContext)();
+    var buf=ac.createBuffer(1,1,22050);
+    var src=ac.createBufferSource();
+    src.buffer=buf;src.connect(ac.destination);src.start(0);
+    setTimeout(function(){ac.close();},200);
+  }catch(e){}
   var f=document.getElementById(flashId);f.classList.add('go');setTimeout(function(){f.classList.remove('go');},380);
 }
 function mkRec(stream,chunks,onStop){
